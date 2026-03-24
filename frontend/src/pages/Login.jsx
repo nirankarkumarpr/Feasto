@@ -55,12 +55,14 @@ function Login() {
 
             {/*Right side*/}
             <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-4 lg:p-8">
-
-                <img
-                    src={logo}
-                    alt="Feasto logo"
-                    className="h-12 mb-8"
-                />
+                
+                <Link to="/">
+                    <img
+                        src={logo}
+                        alt="Feasto logo"
+                        className="h-12 mb-8"
+                    />
+                </Link>
 
                 <div className="w-full max-w-md text-center mb-8">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back :)</h1>
