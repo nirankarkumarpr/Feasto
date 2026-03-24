@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 
@@ -12,11 +12,16 @@ import AdminDashboard from "./pages/AdminDashboard";
 import DeliveryDashboard from "./pages/DeliveryDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Navbar from "./components/Navbar";
 
 function App() {
+  const location = useLocation();
+  const hideNavbar = location.pathname === "/login" || location.pathname === "/register";
+
   return (
     <AuthProvider>
       <CartProvider>
+        {!hideNavbar && <Navbar />}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
