@@ -1,11 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 @import "tailwindcss";
 
-:root {
-  --primary: #FF6B35;
-  --secondary: #FF8C00;
-}
-
 *{
   font-family: "Open Sans", sans-serif !important;
 }
