@@ -1,7 +1,17 @@
+import { Link } from "react-router-dom";
+import Hero from "../components/Hero";
+import Features from "../components/Features";
+import MenuPreview from "../components/MenuPreview";
+import Footer from "../components/Footer";
+
 function Home() {
     return (
-        <h1>Home Page</h1>
-    );
+      <div>
+        <Hero />
+        <Features />
+        <MenuPreview />
+      </div>
+  );
 }
 
 export default Home;

@@ -13,47 +13,56 @@ import DeliveryDashboard from "./pages/DeliveryDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 function App() {
   const location = useLocation();
   const hideNavbar = location.pathname === "/login" || location.pathname === "/register";
+  const hideFooter = location.pathname === "/login" || location.pathname === "/register";
 
   return (
     <AuthProvider>
       <CartProvider>
-        {!hideNavbar && <Navbar />}
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/menu" element={<Menu />} />
+        <div className="min-h-screen flex flex-col">
+          {!hideNavbar && <Navbar />}
 
-          <Route path="/cart" element={
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          } />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/menu" element={<Menu />} />
 
-          <Route path="/orders" element={
-            <ProtectedRoute>
-              <Order />
-            </ProtectedRoute>
-          } />
+              <Route path="/cart" element={
+                <ProtectedRoute>
+                  <Cart />
+                </ProtectedRoute>
+              } />
 
-          <Route path="/admin" element={
-            <ProtectedRoute roles={["admin"]}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
+              <Route path="/orders" element={
+                <ProtectedRoute>
+                  <Order />
+                </ProtectedRoute>
+              } />
 
-          <Route path="/delivery" element={
-            <ProtectedRoute roles={["deliveryBoy"]}>
-              <DeliveryDashboard />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+              <Route path="/admin" element={
+                <ProtectedRoute roles={["admin"]}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/delivery" element={
+                <ProtectedRoute roles={["deliveryBoy"]}>
+                  <DeliveryDashboard />
+                </ProtectedRoute>
+              } />
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+
+          {!hideFooter && <Footer />}
+        </div>
       </CartProvider>
     </AuthProvider>
   );
