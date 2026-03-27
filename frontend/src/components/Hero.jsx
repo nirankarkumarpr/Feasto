@@ -1,15 +1,16 @@
-import React from "react";
 import hero from "../assets/heroSection.png";
 import { BsFillLightningFill } from "react-icons/bs";
+import { Link } from "react-router-dom";
+import { AiFillStar } from "react-icons/ai";
 
 function Hero() {
     return (
-        <section className="w-full py-5 bg-white">
+        <section className="w-full min-h-[80vh] pt-5 pb-16 bg-white">
 
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
 
             <div className="flex-1">
-                <span className="inline-block bg-orange-100 text-orange-500 text-sm font-semibold px-4 py-2 rounded-full mb-4">
+                <span className="inline-flex items-center justify-center bg-orange-100 text-orange-700 text-sm font-semibold px-4 py-2 rounded-full mb-4">
                     <BsFillLightningFill className="inline-block mr-1" />
                     Fastest Delivery
                 </span>
@@ -23,22 +24,27 @@ function Hero() {
                 </p>
                 
                 <div className="flex items-center gap-6 mb-10">
-                    <button className="bg-orange-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-orange-600 transition">
+                    <Link to="/menu"className="bg-orange-500 text-white px-8 py-3.5 rounded-full font-semibold hover:bg-orange-600 transition cursor-pointer">
                         Order Now
-                    </button>
+                    </Link>
 
                     <div className="flex items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-4 py-2">
-                        <span className="font-bold text-orange-500">★★★★★</span>
+                        <span className="flex font-bold text-lg text-orange-500">
+                            <AiFillStar />
+                            <AiFillStar />
+                            <AiFillStar />
+                            <AiFillStar />
+                        </span>
                         <div>
-                            <p className="text-sm font-semibold text-gray-800">5 star rating</p>
-                            <p className="text-xs text-gray-400">based on 1788 reviews</p>
+                            <p className="text-sm font-semibold text-gray-800">4 star rating</p>
+                            <p className="text-xs text-gray-400">based on 954 reviews</p>
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <div className="flex-1 mt-10 md:mt-0">
+            <div className="flex-1 mt-10 md:mt-0 transition duration-300 ease-in-out hover:scale-105">
                 <img src={hero} alt="Delicious food delivery" className="w-full max-w-lg mx-auto" />
             </div>
 
