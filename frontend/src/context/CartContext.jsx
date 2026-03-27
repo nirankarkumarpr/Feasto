@@ -6,10 +6,10 @@ export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
 
     const addToCart = (food) => {
-        const exists = cartItems.find((item) => item._id == food._id);
+        const exists = cartItems.find((item) => item._id === food._id);
 
         if(exists) {
-            setCartItems(cartItems.map((item) => item._id == food._id ? { ...item, quantity: item.quantity+1 } : item));
+            setCartItems(cartItems.map((item) => item._id === food._id ? { ...item, quantity: item.quantity+1 } : item));
         } else {
             setCartItems([...cartItems, { ...food, quantity: 1 }]);
         }
@@ -31,12 +31,31 @@ export const CartProvider = ({ children }) => {
         setCartItems([]);
     };
 
+    const getItemQuantity = (foodId) => {
+        const item = cartItems.find((item) => item._id === foodId);
+        return item ? item.quantity : 0;
+    };
+
+    const increaseQuantity = (foodId) => {
+        const item = cartItems.find((item) => item._id === foodId);
+        if (item) {
+            updateQuantity(foodId, item.quantity + 1); 
+        }
+    };
+
+    const decreaseQuantity = (foodId) => {
+        const item = cartItems.find((item) => item._id === foodId);
+        if (item) {
+            updateQuantity(foodId, item.quantity - 1); 
+        }
+    };
+
     const totalAmount = cartItems.reduce((acc, item) => {
         return acc + item.price * item.quantity;
     }, 0);
 
     return (
-        <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, totalAmount, clearCart, updateQuantity }}>
+        <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, getItemQuantity, increaseQuantity, decreaseQuantity, totalAmount, clearCart, updateQuantity }}>
             {children}
         </CartContext.Provider>
     );
