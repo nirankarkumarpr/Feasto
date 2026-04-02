@@ -27,20 +27,6 @@ function MenuPreview() {
         return <div className="text-center py-10">Loading...</div>;
     }
 
-    if (foods.length === 0) {
-        return (
-            <div className="text-center py-20">
-                <h2 className="text-xl font-semibold text-gray-700">
-                    No foods available
-                </h2>
-
-                <p className="text-gray-500 mt-2">
-                    Please wait for admin to add foods.
-                </p>
-            </div>
-        );
-    }
-
     return (
         <section className="w-full pb-16 bg-white">
 
@@ -54,18 +40,32 @@ function MenuPreview() {
                 </h2>
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                {foods.slice(0, 4).map((food) => (
-                    <FoodCard key={food._id} food={food} />
-                ))}
-            </div>
+            {foods.length === 0 ? (
+                <div className="text-center py-20">
+                    <h2 className="text-xl font-semibold text-gray-700">
+                        No foods available
+                    </h2>
 
-            <div className="text-center mt-10">
-                <Link to="/menu" className="inline-flex items-center justify-center text-gray-900 border border-2 rounded-full px-5 py-2 font-semibold hover:text-orange-600 transition">
-                    View Full Menu &nbsp;
-                    <FaAngleRight />
-                </Link>
-            </div>
+                    <p className="text-gray-500 mt-2">
+                        Please wait for admin to add foods.
+                    </p>
+                </div>
+            ) : (
+                <div>
+                    <div className="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                        {foods.slice(0, 4).map((food) => (
+                            <FoodCard key={food._id} food={food} />
+                        ))}
+                    </div>
+
+                    <div className="text-center mt-10">
+                        <Link to="/menu" className="inline-flex items-center justify-center text-gray-900 border border-2 rounded-full px-5 py-2 font-semibold hover:text-orange-600 transition">
+                            View Full Menu &nbsp;
+                            <FaAngleRight />
+                        </Link>
+                    </div>
+                </div>
+            )}
 
         </section>
     );
