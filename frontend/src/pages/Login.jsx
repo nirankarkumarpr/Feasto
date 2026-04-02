@@ -75,22 +75,37 @@ function Login() {
                         <div className="flex flex-col items-left">
 
                             <label className="text-gray-500 text-sm m-2">Email Address</label>
-                            <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus-within:ring-1 focus-within:ring-orange-300 focus-within:border-orange-300 transition-all duration-200 ">
+                            <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus-within:ring-1 focus-within:ring-orange-300 focus-within:border-orange-300 transition-all duration-200">
                                 <MdEmail className="text-gray-500 text-xl mr-3 shrink-0"/>
-                                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" required className="flex-1 focus:outline-none text-gray-700 text-sm " />
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter your email" required
+                                    className="flex-1 focus:outline-none text-gray-700 text-sm"
+                                />
                             </div>
 
                             <label className="text-gray-500 text-sm m-2">Password</label>
                             <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus-within:ring-1 focus-within:ring-orange-300 focus-within:border-orange-300 transition-all duration-200">
                                 <MdLock className="text-gray-500 text-xl mr-3 shrink-0"/>
-                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required className="flex-1 focus:outline-none text-gray-700 text-sm " />
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter your password" required
+                                    className="flex-1 focus:outline-none text-gray-700 text-sm"
+                                />
                             </div>
                             
                         </div>
 
                         <div className="flex items-center justify-between">
                             <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
-                                <input type="checkbox" className="accent-orange-500"/>
+                                <input
+                                    type="checkbox"
+                                    className="accent-orange-500"
+                                />
                                 Remember Me
                             </label>
                             <a href="#" className="text-sm text-gray-400 hover:text-orange-500 transition">
@@ -99,7 +114,13 @@ function Login() {
                         </div>
 
                         <div className="flex gap-4 mt-8">
-                            <button type="submit" disabled={loading} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-full transition cursor-pointer">{loading ? "Logging in..." : "Login Now"}</button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-full transition cursor-pointer"
+                            >
+                                    {loading ? "Logging in..." : "Login Now"}
+                            </button>
                             <Link to="/register" className="flex-1 border border-gray-300 text-gray-600 rounded-full hover:border-orange-500 hover:text-orange-500 transition cursor-pointer flex items-center justify-center py-3">Create Account</Link>
                         </div>
 
