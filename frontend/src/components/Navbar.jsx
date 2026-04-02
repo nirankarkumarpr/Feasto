@@ -15,7 +15,7 @@ function Navbar() {
     };
 
     return (
-        <nav className="w-full bg-white px-15 py-8 flex items-center justify-between">
+        <nav className="w-full bg-white px-8 lg:px-18 py-8 flex items-center justify-between">
 
             <div className="flex items-center gap-5">
                 <Link to="/">
