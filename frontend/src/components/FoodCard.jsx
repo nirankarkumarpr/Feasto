@@ -57,7 +57,7 @@ function FoodCard({ food }) {
             </div>
 
             <div className="mt-5 flex items-left flex-col justify-center gap-2">
-                <h2 className="text-2xl font-bold text-slate-900">{food.name}</h2>
+                <h2 className="text-xl font-bold text-slate-900">{food.name}</h2>
                 <span className="flex font-bold text-lg text-orange-500">
                     <AiFillStar />
                     <AiFillStar />
