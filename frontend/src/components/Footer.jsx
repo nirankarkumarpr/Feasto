@@ -13,7 +13,7 @@ function Footer() {
                 <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-12">
 
                     <div className="w-full flex flex-col lg:col-span-3">
-                        <Link to="/">
+                        <Link to="/"> 
                             <img
                                 src={logos}
                                 alt="Feasto logo"
