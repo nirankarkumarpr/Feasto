@@ -188,7 +188,7 @@ function Cart() {
                                 </button>
                                 <button
                                     onClick={() => setPaymentMethod("online")}
-                                    className={`w-full p-2 border border-gray-300 rounded-md ${paymentMethod === "online" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-500"}`}>
+                                    className={`w-full p-2 border border-gray-300 rounded-md ${paymentMethod === "online" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-500"} cursor-pointer`}>
                                     Online Payment
                                 </button>
                             </div>
