@@ -6,11 +6,12 @@ import logo from "../assets/logo.png";
 
 function Navbar() {
     const { user, logout } = useAuth();
-    const { cartItems } = useCart();
+    const { cartItems, clearCart } = useCart();
     const navigate = useNavigate();
 
     const handleLogout = () => {
         logout();
+        clearCart();
         navigate("/");
     };
 

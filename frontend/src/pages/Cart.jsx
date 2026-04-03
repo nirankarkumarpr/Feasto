@@ -3,9 +3,11 @@ import { useCart } from "../context/CartContext";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api/axios";
 import toast from "react-hot-toast";
-import { MdDelete, MdShoppingCart, MdLocationOn } from "react-icons/md";
+import { MdDelete, MdShoppingCart, MdLocationOn, MdPayment } from "react-icons/md";
 import { HiPlusCircle, HiMinusCircle } from "react-icons/hi2";
+import { FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
+import { BsCashStack } from "react-icons/bs";
 
 function Cart() {
     const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity, totalAmount, clearCart } = useCart();
@@ -144,61 +146,96 @@ function Cart() {
                 </div>
             
 
-                <div className="lg:col-span-2">
-                    <div className="bg-white rounded-2xl p-6 shadow-[0_0_20px_rgba(15,23,50,0.10)] sticky top-24">
-
+                <div className="lg:col-span-2 space-y-6">
+                    
+                    <div className="bg-white rounded-2xl p-6 shadow-[0_0_20px_rgba(15,23,50,0.10)]">
                         <h2 className="text-xl font-bold text-gray-800 mb-4">
-                            Order Total
+                            Bill Summary
                         </h2>
 
-                        <div className="space-y-3 mb-4">
+                        <div className="space-y-3">
                             <div className="flex justify-between text-gray-600">
                                 <span>Subtotal</span>
                                 <span className="font-semibold text-gray-800">₹{totalAmount}</span>
                             </div>
                             <div className="flex justify-between text-gray-600">
-                                <span>Delivery</span>
+                                <span>Delivery Charge</span>
                                 <span className="font-semibold text-gray-800">₹{deliveryCharge}</span>
                             </div>
                             <div className="border-t border-gray-300 pt-3 flex justify-between font-bold text-gray-800 text-lg">
-                                <span>Total</span>
+                                <span>Grand Total</span>
                                 <span className="text-orange-500">₹{grandTotal}</span>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="mb-4">
-                            <label className="flex items-center gap-1 text-sm font-semibold text-gray-700 mb-2">
-                                <MdLocationOn className="text-orange-500"/>
+                    <div className="bg-white rounded-2xl p-6 shadow-[0_0_20px_rgba(15,23,50,0.10)] lg:sticky lg:top-24">
+
+                        <div className="mb-6">
+                            <label className="flex items-center gap-1 text-sm font-semibold text-gray-700 mb-3">
+                                <FaLocationDot className="text-orange-500 text-md"/>
                                 Delivery Address
                             </label>
                             <textarea
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
-                                placeholder="Enter your delivery address"
-                                className="w-full p-2 border border-gray-300 rounded-md" />
+                                placeholder="Enter your complete delivery address (House/Flat No., Street, Area, City, Pincode)"
+                                rows="4"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition resize-none text-gray-700"
+                            />
                         </div>
 
-                        <div>
-                            <p>Payment Method</p>
-                            <div>
-                                <button
-                                    onClick={() => setPaymentMethod("cod")}
-                                    className={`w-full p-2 border border-gray-300 rounded-md ${paymentMethod === "cod" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-500"}`}>
-                                    Cash on Delivery
-                                </button>
-                                <button
-                                    onClick={() => setPaymentMethod("online")}
-                                    className={`w-full p-2 border border-gray-300 rounded-md ${paymentMethod === "online" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-500"} cursor-pointer`}>
-                                    Online Payment
-                                </button>
+                        <div className="mb-6">
+                            <div className="space-y-3">
+                                <label
+                                    className={`w-full p-4 border-2 rounded-lg transition-all duration-200 flex items-center gap-3 cursor-pointer ${
+                                        paymentMethod === "cod" 
+                                            ? "border-orange-500 bg-orange-50 text-orange-700" 
+                                            : "border-gray-300 bg-white text-gray-700 hover:border-orange-300"
+                                    }`}
+                                >
+                                    <BsCashStack className="text-2xl" />
+                                    <div className="text-left flex-1">
+                                        <p className="font-semibold">Cash on Delivery</p>
+                                        <p className="text-xs opacity-75">Pay when you receive</p>
+                                    </div>
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        checked={paymentMethod === "cod"}
+                                        onChange={() => setPaymentMethod("cod")}
+                                        className="w-5 h-5 accent-orange-500 cursor-pointer rounded-full appearance-none border-2 border-gray-300 checked:bg-orange-500 checked:border-orange-500"
+                                    />
+                                </label>
+                                <label
+                                    className={`w-full p-4 border-2 rounded-lg transition-all duration-200 flex items-center gap-3 cursor-pointer ${
+                                        paymentMethod === "online" 
+                                            ? "border-orange-500 bg-orange-50 text-orange-700" 
+                                            : "border-gray-300 bg-white text-gray-700 hover:border-orange-300"
+                                    }`}
+                                >
+                                    <FaCreditCard className="text-2xl" />
+                                    <div className="text-left flex-1">
+                                        <p className="font-semibold">Online Payment</p>
+                                        <p className="text-xs opacity-75">UPI, Card, Net Banking</p>
+                                    </div>
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        checked={paymentMethod === "online"}
+                                        onChange={() => setPaymentMethod("online")}
+                                        className="w-5 h-5 accent-orange-500 cursor-pointer rounded-full appearance-none border-2 border-gray-300 checked:bg-orange-500 checked:border-orange-500"
+                                    />
+                                </label>
                             </div>
                         </div>
 
                         <button
                             onClick={handlePlaceOrder}
                             disabled={loading}
-                            className="w-full p-2 border border-gray-300 rounded-md bg-orange-500 text-white">
-                            {loading ? "Placing Order..." : "Place Order"}
+                            className="flex items-center justify-center gap-2 w-full py-4 rounded-full bg-orange-500 text-white font-semibold text-xl hover:bg-orange-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                        >
+                            {loading ? "Placing Order..." : paymentMethod === "cod" ? "Place Order" : "Proceed to payment"}
                         </button>
 
                     </div>
