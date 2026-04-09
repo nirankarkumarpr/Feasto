@@ -5,7 +5,7 @@ import API from "../api/axios";
 import toast from "react-hot-toast";
 import { MdDelete, MdShoppingCart, MdLocationOn, MdPayment } from "react-icons/md";
 import { HiPlusCircle, HiMinusCircle } from "react-icons/hi2";
-import { FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+import { FaCreditCard } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
 import { BsCashStack } from "react-icons/bs";
 
