@@ -23,21 +23,21 @@ function Hero() {
                         Experience the joy of your favorite meals delivered to your doorstep anytime, anywhere.
                     </p>
                     
-                    <div className="flex items-center gap-6 mb-10">
-                        <Link to="/menu"className="bg-orange-500 text-white px-8 py-3.5 rounded-full font-semibold hover:bg-orange-600 transition cursor-pointer">
+                    <div className="flex flex-row items-center gap-3 sm:gap-6 mb-10 overflow-x-auto">
+                        <Link to="/menu"className="bg-orange-500 text-white px-5 sm:px-8 py-3 sm:py-3.5 rounded-full font-semibold hover:bg-orange-600 transition cursor-pointer whitespace-nowrap shrink-0">
                             Order Now
                         </Link>
 
-                        <div className="flex items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-4 py-2">
-                            <span className="flex font-bold text-lg text-orange-500">
+                        <div className="flex items-center gap-2 sm:gap-3 rounded-full border border-gray-200 bg-gray-50 px-3 sm:px-4 py-2 shrink-0">
+                            <span className="flex font-bold text-base sm:text-lg text-orange-500">
                                 <AiFillStar />
                                 <AiFillStar />
                                 <AiFillStar />
                                 <AiFillStar />
                             </span>
                             <div>
-                                <p className="text-sm font-semibold text-gray-800">4 star rating</p>
-                                <p className="text-xs text-gray-400">based on 954 reviews</p>
+                                <p className="text-xs sm:text-sm font-semibold text-gray-800 whitespace-nowrap">4 star rating</p>
+                                <p className="text-[10px] sm:text-xs text-gray-400 whitespace-nowrap">based on 954 reviews</p>
                             </div>
                         </div>
                     </div>
