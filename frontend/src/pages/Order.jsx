@@ -1,347 +1,247 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import API from "../api/axios";
+import StatusButton from "../components/DeliveryStatus";
 import toast from "react-hot-toast";
-import { FiChevronRight, FiX } from "react-icons/fi";
-
-const IN_PROGRESS_STATUSES = [
-  "pending",
-  "confirmed",
-  "preparing",
-  "out_for_delivery",
-];
-
-function formatINR(amount) {
-  const n = Number(amount ?? 0);
-  return new Intl.NumberFormat("en-IN", {
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatOrderDate(dateLike) {
-  const d = new Date(dateLike);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function getOrderStatusUI(status) {
-  if (status === "delivered") {
-    return {
-      label: "Delivered",
-      badge: "bg-green-50 text-green-700",
-      dot: "bg-green-500",
-    };
-  }
-
-  if (status === "cancelled") {
-    return {
-      label: "Cancelled",
-      badge: "bg-red-50 text-red-700",
-      dot: "bg-red-500",
-    };
-  }
-
-  return {
-    label: "In progress",
-    badge: "bg-orange-50 text-orange-700",
-    dot: "bg-orange-500",
-  };
-}
-
-function displayOrderId(order) {
-  // No custom orderId exists in backend model; derive something readable.
-  const id = order?._id ?? order?.id ?? "";
-  if (!id) return "—";
-  return id.toString().slice(-10).toUpperCase();
-}
+import { MdClose, MdDeliveryDining } from "react-icons/md";
+import { FaChevronRight } from "react-icons/fa6";
+import { fi } from "@faker-js/faker";
 
 function Order() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTab, setSelectedTab] = useState("All");
+  const [filter, setFilter] = useState("In Progress");
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        setLoading(true);
         const { data } = await API.get("/orders/my");
-        setOrders(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Failed to fetch orders:", err);
-        toast.error("Failed to load orders");
-        setOrders([]);
+        setOrders(data);
+      } catch(err) {
+        toast.error("Failed to fetch orders!");
       } finally {
         setLoading(false);
       }
     };
-
     fetchOrders();
   }, []);
 
-  const filteredOrders = useMemo(() => {
-    if (selectedTab === "All") return orders;
+  const inProgressStatuses = ["pending", "confirmed", "preparing", "out_for_delivery"];
 
-    if (selectedTab === "In Progress") {
-      return orders.filter((o) => IN_PROGRESS_STATUSES.includes(o.status));
-    }
+  const filteredOrders = orders.filter((order) => {
+    if(filter === "In Progress") return inProgressStatuses.includes(order.status);
+    if(filter === "Delivered") return order.status === "delivered";
+    if(filter === "Cancelled") return order.status === "cancelled";
+    return true;
+  });
 
-    if (selectedTab === "Delivered") {
-      return orders.filter((o) => o.status === "delivered");
-    }
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
-    if (selectedTab === "Cancelled") {
-      return orders.filter((o) => o.status === "cancelled");
-    }
-
-    return orders;
-  }, [orders, selectedTab]);
-
-  const tabs = ["All", "In Progress", "Delivered", "Cancelled"];
+  if (loading) {
+    return <div className="text-center py-10">Loading...</div>;
+  };
 
   return (
-    <section className="min-h-screen bg-white">
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="flex items-end justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900">
-              My Orders
-            </h1>
-            <p className="mt-2 text-sm text-gray-500">
-              Track your food delivery status.
-            </p>
-          </div>
-        </div>
+    <div className="min-h-screen max-w-7xl mx-auto px-6 pt-5 pb-16 bg-white">
 
-        <div className="mt-6 flex flex-nowrap gap-3 overflow-x-auto scrollbar-hide">
-          {tabs.map((tab) => {
-            const isActive = selectedTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => setSelectedTab(tab)}
-                className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition cursor-pointer ${
-                  isActive
-                    ? "border-orange-500 bg-white text-orange-600"
-                    : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                {tab}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-6 space-y-4">
-          {loading ? (
-            <div className="space-y-4">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="animate-pulse rounded-2xl border border-gray-200 bg-white p-5"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="h-16 w-16 rounded-xl bg-gray-100" />
-                    <div className="flex-1">
-                      <div className="h-3 w-24 bg-gray-100 rounded mb-3" />
-                      <div className="h-3 w-full bg-gray-100 rounded mb-2" />
-                      <div className="h-3 w-56 bg-gray-100 rounded" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : filteredOrders.length === 0 ? (
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
-              <p className="text-gray-700 font-semibold">
-                No orders found.
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                Try changing the filter.
-              </p>
-            </div>
-          ) : (
-            filteredOrders.map((order) => {
-              const itemCount = order?.items?.length ?? 0;
-              const firstFood = order?.items?.[0]?.food;
-              const extraCount = Math.max(0, itemCount - 1);
-
-              const statusUI = getOrderStatusUI(order?.status);
-              const orderDate = formatOrderDate(order?.createdAt);
-              const displayId = displayOrderId(order);
-
-              const firstItemName = firstFood?.name ?? "Food item";
-              const itemSummary =
-                extraCount > 0
-                  ? `${firstItemName} | ${extraCount} more items`
-                  : firstItemName;
-
-              return (
-                <div
-                  key={order._id}
-                  className="flex items-start justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5"
-                >
-                  <div className="flex items-start gap-4 min-w-0">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                      {firstFood?.image ? (
-                        <img
-                          src={firstFood.image}
-                          alt={firstFood.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-orange-300">
-                          {firstItemName.charAt(0)}
-                        </div>
-                      )}
-
-                      {extraCount > 0 && (
-                        <span className="absolute bottom-1 right-1 rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-gray-700">
-                          +{extraCount}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span
-                          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${statusUI.badge}`}
-                        >
-                          <span
-                            className={`h-2 w-2 rounded-full ${statusUI.dot}`}
-                          />
-                          {statusUI.label}
-                        </span>
-                        {orderDate && (
-                          <span className="text-sm text-gray-400">
-                            | {orderDate}
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="mt-3 text-sm font-bold text-gray-900">
-                        Order ID: {displayId}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-600 truncate">
-                        {itemSummary}
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900">
-                        ₹{formatINR(order.totalAmount)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedOrder(order)}
-                    className="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-50 transition"
-                    aria-label="View order details"
-                  >
-                    <FiChevronRight className="text-xl text-orange-600" />
-                  </button>
-                </div>
-              );
-            })
-          )}
-        </div>
+      <div className="mb-10 flex flex-col items-center justify-center">
+          <span className="inline-flex items-center justify-center bg-orange-100 text-orange-700 text-sm font-semibold px-4 py-2 rounded-full mb-4">
+              <MdDeliveryDining className="inline-block mr-1 w-5 h-5" />
+              YOUR ORDERS
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 text-center">
+              Track your food delivery status
+          </h2>
       </div>
+
+      <div className="flex gap-3 mb-6">
+        {["In Progress", "Delivered", "Cancelled"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setFilter(tab)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold border transition cursor-pointer ${
+              filter === tab
+                ? "border-orange-500 text-orange-500 bg-orange-50"
+                : "border-gray-200 text-gray-600 hover:border-orange-300"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {filteredOrders.length === 0 ? (
+        <div className="text-center py-20">
+            <h2 className="text-xl font-semibold text-gray-700">
+                No orders found!
+            </h2>
+
+            <p className="text-gray-500 mt-2">
+                You have no {filter.toLowerCase()} orders.
+            </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredOrders.map((order) => (
+            <div
+              key={order._id}
+              onClick={() => setSelectedOrder(order)}
+              className="flex items-center gap-4 p-4 border border-gray-300 rounded-2xl cursor-pointer hover:bg-gray-50 transition"
+            >
+
+              <div className="relative w-24 h-24 mr-2 shrink-0">
+
+                <div className="w-24 h-24 rounded-xl overflow-hidden">
+                  {order.items[0]?.food?.image? (
+                    <img
+                      src={order.items[0]?.food?.image}
+                      alt={order.items[0]?.food?.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                      {order.items[0]?.food?.name?.charAt(0)}
+                    </div>
+                  )}
+                </div>
+
+                {order.items.length > 1 && (
+                  <div className="absolute bottom-1 right-1 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    +{order.items.length - 1}
+                  </div>
+                )}
+
+              </div>
+              
+              <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <StatusButton order={order} />
+                  <span className="text-xs text-gray-400">
+                     {formatDate(order.createdAt)}
+                  </span>
+                </div>
+                
+                <p className="font-bold text-gray-800 text-xs sm:text-sm">
+                  Order ID: {order._id.slice(-8).toUpperCase()}
+                </p>
+
+                <p className="text-xs text-gray-500 truncate">
+                  {order.items[0]?.food?.name}
+                  {order.items.length > 1 && ` | ${order.items.length - 1} more item${order.items.length > 2 ? "s" : ""}`}
+                </p>
+
+                <p className="font-bold text-gray-900 text-sm">
+                  ₹{order.totalAmount}
+                </p>
+
+              </div>
+
+              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 shrink-0">
+                <FaChevronRight className="w-4 h-4 text-gray-500" />
+              </div>
+
+            </div>
+          ))}
+        </div>
+      )}
 
       {selectedOrder && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          role="dialog"
-          aria-modal="true"
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4"
+          onClick={() => setSelectedOrder(null)}
         >
-          <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white">
-            <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-5 py-4">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">
-                  Order Details
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  Order ID: {displayOrderId(selectedOrder)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedOrder(null)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition"
-                aria-label="Close"
-              >
-                <FiX className="text-xl text-gray-700" />
-              </button>
-            </div>
+          <div
+          className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
 
-            <div className="px-5 py-4">
-              {(() => {
-                const statusUI = getOrderStatusUI(selectedOrder?.status);
-                return (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span
-                      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${statusUI.badge}`}
-                    >
-                      <span
-                        className={`h-2 w-2 rounded-full ${statusUI.dot}`}
-                      />
-                      {statusUI.label}
-                    </span>
-
-                    <span className="text-sm text-gray-500">
-                      {formatOrderDate(selectedOrder?.createdAt) || ""}
-                    </span>
-                  </div>
-                );
-              })()}
-
-              <div className="mt-4 space-y-2">
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Address:</span>{" "}
-                  {selectedOrder?.address}
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Payment:</span>{" "}
-                  {selectedOrder?.paymentMethod}
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Total:</span> ₹
-                  {formatINR(selectedOrder?.totalAmount)}
-                </p>
-              </div>
-
-              <div className="mt-5 border-t border-gray-100 pt-4">
-                <h3 className="text-sm font-bold text-gray-900">
-                  Items
-                </h3>
-                <div className="mt-3 space-y-3">
-                  {(selectedOrder?.items ?? []).map((it, idx) => (
-                    <div
-                      key={it.food?._id ?? idx}
-                      className="flex items-start justify-between gap-4"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-semibold text-gray-900 truncate">
-                          {it.food?.name ?? "Food"}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Qty: {it.quantity} x ₹{formatINR(it.price)}
-                        </p>
-                      </div>
-                      <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                        ₹{formatINR(it.price * it.quantity)}
-                      </p>
-                    </div>
-                  ))}
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Order Details</h2>
+                  <p className="text-sm text-gray-400">Order ID: {selectedOrder._id.slice(-8).toUpperCase()}</p>
                 </div>
+                <button
+                    className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
+                    onClick={() => setSelectedOrder(null)}
+                  >
+                    <MdClose className="text-2xl"/>
+                  </button>
+              </div>
+
+              <div className="border-t opacity-30 mb-4"/>
+
+              <div className="flex items-center gap-3 mb-4">
+                <StatusButton order={selectedOrder} />
+                <span className="text-sm text-gray-400">{formatDate(selectedOrder.createdAt)}</span>
+              </div>
+
+              <div className="space-y-2 mb-4 text-sm">
+                <p className="text-gray-700">
+                  <span className="font-semibold">Address: </span>
+                  {selectedOrder.address}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-semibold">Payment: </span>
+                  {selectedOrder.paymentMethod.toUpperCase()}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-semibold">Total: </span>
+                  <span className="text-orange-500 font-bold">₹{selectedOrder.totalAmount}</span>
+                </p>
+              </div>
+
+              <div className="border-t opacity-10"/>
+            </div>
+
+            <div className="px-6 pb-6 overflow-y-auto">
+              <h3 className="font-bold text-gray-900 mb-3">Items</h3>
+              <div className="space-y-3">
+                {selectedOrder.items.map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+
+                    <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0">
+                      {item.food?.image ? (
+                        <img
+                          src={item.food.image}
+                          alt={item.food.name}
+                          className="w-full h-full object-cover scale-125"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-semibold">
+                          {item.food?.name?.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-800">{item.food?.name}</p>
+                        <p className="text-xs text-gray-400">Qty: {item.quantity} x ₹{item.price}</p>
+                      </div>
+
+                      <p className="font-semibold text-gray-900">₹{item.quantity * item.price}</p>
+                    </div>
+
+                  </div>
+                  
+                ))}
               </div>
             </div>
+
           </div>
         </div>
       )}
-    </section>
+
+      </div>
   );
 }
 
-export default Order;
+export default Order; 
