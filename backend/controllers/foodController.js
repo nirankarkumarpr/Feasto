@@ -28,6 +28,31 @@ const createFood = async (req, res) => {
     }
 };
 
+//PUT for updating food data
+const updateFood = async (req, res) => {
+    try {
+        const { name, description, price, category, image } = req.body;
+
+        const food = await Food.findById(req.params.id);
+
+        if (!food) {
+            return res.status(404).json({ message: "Food not found!" });
+        }
+
+        food.name = name || food.name;
+        food.description = description || food.description;
+        food.price = price || food.price;
+        food.category = category || food.category;
+        food.image = image || food.image;
+
+        const updatedFood = await food.save();
+
+        res.status(200).json(updatedFood);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 //DELETE for deleting food data
 const deleteFood = async (req, res) => {
     try{
@@ -43,4 +68,4 @@ const deleteFood = async (req, res) => {
     }
 };
 
-module.exports = { getAllFoods, createFood, deleteFood };
+module.exports = { getAllFoods, createFood, updateFood, deleteFood };

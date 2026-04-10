@@ -3,11 +3,15 @@ const Order = require("../models/Order");
 //Create order
 const createOrder = async (req, res) => {
     try{
-        const { items, address, paymentMethod } = req.body;
+        const { items, address, paymentMethod, totalAmount } = req.body;
 
-        const totalAmount = items.reduce((acc, item) => {
+        const deliveryFee = 40;
+        const calculatedTotal = items.reduce((acc, item) => {
             return acc + item.price * item.quantity;
         }, 0);
+        if (totalAmount < calculatedTotal + deliveryFee) {
+            return res.status(400).json({ message: "Invalid total amount" });
+        }
 
         const order = await Order.create({
             user: req.user._id,
@@ -37,7 +41,7 @@ const getMyOrders = async(req, res) => {
 //Get all orders - for Admin
 const getAllOrders = async(req, res) => {
     try{
-        const orders = await Order.find().populate("user", "name email").populate("items.food", "name price").populate("deliveryBoy", "name email");
+        const orders = await Order.find().populate("user", "name email").populate("items.food", "name price image").populate("deliveryBoy", "name email");
 
         res.status(200).json(orders);
     } catch(err){
@@ -86,4 +90,21 @@ const getDeliveryOrders = async(req, res) => {
     }
 };
 
-module.exports = { createOrder, getMyOrders, getAllOrders, updateOrderStatus, getDeliveryOrders };
+//Delete order - for Admin
+const deleteOrder = async(req, res) => {
+    try{
+        const order = await Order.findById(req.params.id);
+
+        if(!order) {
+            return res.status(404).json({ message: "Order not found!" });
+        }
+
+        await Order.findByIdAndDelete(req.params.id);
+
+        res.status(200).json({ message: "Order deleted successfully!" });
+    } catch(err){
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = { createOrder, getMyOrders, getAllOrders, updateOrderStatus, getDeliveryOrders, deleteOrder };

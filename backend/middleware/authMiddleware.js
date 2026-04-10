@@ -28,7 +28,7 @@ const protect = async(req, res, next) => {
 const authorizeRoles = (...roles) => {
     return (req, res, next) => {
         if(!roles.includes(req.user.role)){
-            res.status(402).json({ message: `${req.user.role} is not authorized!` });
+            return res.status(403).json({ message: `${req.user.role} is not authorized!` });
         }
 
         next();

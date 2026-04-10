@@ -100,19 +100,6 @@ function Login() {
                             
                         </div>
 
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    className="accent-orange-500"
-                                />
-                                Remember Me
-                            </label>
-                            <a href="#" className="text-sm text-gray-400 hover:text-orange-500 transition">
-                                Forget Password?
-                            </a>
-                        </div>
-
                         <div className="flex gap-4 mt-8">
                             <button
                                 type="submit"
