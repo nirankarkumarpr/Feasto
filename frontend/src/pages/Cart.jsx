@@ -8,6 +8,7 @@ import { HiPlusCircle, HiMinusCircle } from "react-icons/hi2";
 import { FaCreditCard } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
 import { BsCashStack } from "react-icons/bs";
+import PageHeader from "../components/PageHeader";
 
 function Cart() {
     const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity, totalAmount, clearCart } = useCart();
@@ -70,15 +71,7 @@ function Cart() {
    return (
     <section className="min-h-screen max-w-7xl mx-auto px-6 pt-5 pb-16 bg-white">
 
-            <div className="mb-10 flex flex-col items-center">
-                <span className="inline-flex items-center justify-center bg-orange-100 text-orange-700 text-sm font-semibold px-4 py-2 rounded-full mb-4">
-                    <MdShoppingCart className="inline-block mr-1 w-5 h-5" />
-                    YOUR CART
-                </span>
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">
-                    Your Order Summary
-                </h2>
-            </div>
+            <PageHeader icon={MdShoppingCart} badge="YOUR CART" title="Your Order Summary" />
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 

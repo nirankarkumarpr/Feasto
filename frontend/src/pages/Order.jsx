@@ -4,7 +4,7 @@ import StatusButton from "../components/DeliveryStatus";
 import toast from "react-hot-toast";
 import { MdClose, MdDeliveryDining } from "react-icons/md";
 import { FaChevronRight } from "react-icons/fa6";
-import { fi } from "@faker-js/faker";
+import PageHeader from "../components/PageHeader";
 
 function Order() {
   const [orders, setOrders] = useState([]);
@@ -49,16 +49,8 @@ function Order() {
 
   return (
     <div className="min-h-screen max-w-7xl mx-auto px-6 pt-5 pb-16 bg-white">
-
-      <div className="mb-10 flex flex-col items-center justify-center">
-          <span className="inline-flex items-center justify-center bg-orange-100 text-orange-700 text-sm font-semibold px-4 py-2 rounded-full mb-4">
-              <MdDeliveryDining className="inline-block mr-1 w-5 h-5" />
-              YOUR ORDERS
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 text-center">
-              Track your food delivery status
-          </h2>
-      </div>
+      
+      <PageHeader icon={MdDeliveryDining} badge="YOUR ORDERS" title="Track your food delivery status" />
 
       <div className="flex gap-3 mb-6">
         {["In Progress", "Delivered", "Cancelled"].map((tab) => (
