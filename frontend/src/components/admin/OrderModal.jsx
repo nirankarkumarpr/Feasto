@@ -1,14 +1,9 @@
 import API from "../../api/axios";
 import toast from "react-hot-toast";
 import { MdClose, MdDelete } from "react-icons/md";
-import StatusButton from "../DeliveryStatus";
+import { StatusButton, formatDate, formatPaymentMethod } from "../../utils/orderUtils.jsx";
 
 function OrderModal({ order, setSelectedOrder, fetchData }) {
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  };
-
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this order?")) return;
     try {
@@ -68,7 +63,7 @@ function OrderModal({ order, setSelectedOrder, fetchData }) {
             </p>
 
             <p className="text-gray-700">
-              <span className="font-semibold">Payment: </span>{order.paymentMethod.toUpperCase()}
+              <span className="font-semibold">Payment: </span>{formatPaymentMethod(order.paymentMethod)}
             </p>
 
             <p className="text-gray-700">
@@ -107,7 +102,7 @@ function OrderModal({ order, setSelectedOrder, fetchData }) {
                     
                     <p className="text-xs text-gray-400">Qty: {item.quantity} x ₹{item.price}</p>
                   </div>
-                  
+
                   <p className="font-semibold text-gray-900">₹{item.quantity * item.price}</p>
                 </div>
               </div>
