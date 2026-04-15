@@ -1,4 +1,5 @@
-function StatusButton({ order }) {
+// Status Button Component
+export function StatusButton({ order }) {
     const getStatusStyle = (status) => {
         const styles = {
             pending: "bg-yellow-100 text-yellow-600",
@@ -25,10 +26,25 @@ function StatusButton({ order }) {
 
     return (
         <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${getStatusStyle(order.status)}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${getStatusDot(order.status)}`}/>
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStatusDot(order.status)}`}/>
             {order.status.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
         </span>
-    )
+    );
+}
+
+// Format date with time
+export const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const timeStr = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+    return `${dateStr} | ${timeStr}`;
 };
 
-export default StatusButton;
+// Format payment method to full form
+export const formatPaymentMethod = (method) => {
+    const methods = {
+        cod: "Cash On Delivery",
+        online: "Online Payment"
+    };
+    return methods[method.toLowerCase()] || method.toUpperCase();
+};
