@@ -60,15 +60,23 @@ const updateOrderStatus = async(req, res) => {
             return res.status(404).json({ message: "Order not found!"});
         }
 
-        //Only assigned delivery boy can update their order status
-        if(req.user.role === "deliveryBoy" && order.deliveryBoy.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: "Not your order!" });
+        // If delivery boy is accepting an order (no deliveryBoy assigned yet)
+        if(req.user.role === "deliveryBoy" && !order.deliveryBoy && deliveryBoy) {
+            order.deliveryBoy = deliveryBoy;
+            order.status = status;
         }
 
-        order.status = status;
-
-        if(deliveryBoy){
-            order.deliveryBoy = deliveryBoy;
+        // If delivery boy is updating their own order
+        else if(req.user.role === "deliveryBoy" && order.deliveryBoy && order.deliveryBoy.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "Not your order!" });
+        }
+        
+        // Admin or delivery boy updating their own order
+        else {
+            order.status = status;
+            if(deliveryBoy){
+                order.deliveryBoy = deliveryBoy;
+            }
         }
 
         await order.save();
@@ -82,10 +90,19 @@ const updateOrderStatus = async(req, res) => {
 //Get delivery orders
 const getDeliveryOrders = async(req, res) => {
     try{
-        const order = await Order.find({ deliveryBoy: req.user._id }).populate("user", "name email").populate("items.food", "name price");
+        const orders = await Order.find({
+            $or: [
+                { deliveryBoy: req.user._id },
+                { status: "preparing", deliveryBoy: null }
+            ]
+        })
+        .populate("user", "name email")
+        .populate("items.food", "name price image")
+        .populate("deliveryBoy", "name email")
+        .sort({ createdAt: -1 });
 
-        res.status(200).json(order);
-    }  catch(err){
+        res.status(200).json(orders);
+    } catch(err){
         res.status(500).json({ message: err.message });
     }
 };
