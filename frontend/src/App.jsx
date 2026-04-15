@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import CartNotification from "./components/CartNotification";
 
 function App() {
   const location = useLocation();
@@ -62,6 +63,8 @@ function App() {
           </main>
 
           {!hideFooter && <Footer />}
+          
+          <CartNotification />
         </div>
       </CartProvider>
     </AuthProvider>
