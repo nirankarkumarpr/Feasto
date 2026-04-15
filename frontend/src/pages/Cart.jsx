@@ -3,7 +3,7 @@ import { useCart } from "../context/CartContext";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api/axios";
 import toast from "react-hot-toast";
-import { MdDelete, MdShoppingCart, MdLocationOn, MdPayment } from "react-icons/md";
+import { MdDelete, MdShoppingCart } from "react-icons/md";
 import { HiPlusCircle, HiMinusCircle } from "react-icons/hi2";
 import { FaCreditCard } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
@@ -79,55 +79,55 @@ function Cart() {
                     {cartItems.map((item) => (
                         <div 
                             key={item._id}
-                            className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_0_20px_rgba(15,23,50,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_0_60px_rgba(249,115,100,0.15)]"
+                            className="flex items-center justify-between gap-3 sm:gap-4 rounded-2xl border border-slate-100 bg-white p-3 sm:p-4 shadow-[0_0_20px_rgba(15,23,50,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_0_60px_rgba(249,115,100,0.15)]"
                         >
-                            <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0">
                                 {item.image ? (
                                     <img 
                                         src={item.image} 
                                         alt={item.name} 
                                         className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-2xl font-bold">
+                                    <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xl sm:text-2xl font-bold">
                                         {item.name.charAt(0)}
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex-1 ml-4">
-                                <h3 className="italic text-sm text-blue-800">{item.category}</h3>
-                                <p className="font-bold text-lg text-gray-800">{item.name}</p>
-                                <p className="font-semibold text-gray-800">₹{item.price}</p>  
+                            <div className="flex-1 min-w-0">
+                                <h3 className="italic text-xs text-blue-800">{item.category}</h3>
+                                <p className="font-bold text-sm sm:text-lg text-gray-800 truncate">{item.name}</p>
+                                <p className="font-semibold text-sm sm:text-base text-gray-800">₹{item.price}</p>  
                             </div>
 
-                            <div className="flex flex-col lg:flex-row">
+                            <div className="flex flex-col gap-2 items-end">
 
-                                <div className="h-10 w-full flex items-center justify-between rounded-full bg-gray-200 px-0 sm:w-30">
+                                <div className="flex items-center rounded-full bg-gray-200">
                                     <button
                                         onClick={() => decreaseQuantity(item._id)}
                                         type="button"
-                                        className="flex h-12 w-12 items-center justify-center text-black transition hover:opacity-70 cursor-pointer"
+                                        className="flex h-7 w-7 sm:h-10 sm:w-10 items-center justify-center text-black transition hover:opacity-70 cursor-pointer"
                                     >
-                                        <HiMinusCircle className="h-7 w-7" />
+                                        <HiMinusCircle className="h-5 w-5 sm:h-6 sm:w-6" />
                                     </button>
-                                    <span className="font-semibold text-black text-xl">{item.quantity}</span>
+                                    <span className="font-semibold text-black text-sm sm:text-lg px-2 sm:px-3">{item.quantity}</span>
                                     <button
                                         onClick={() => increaseQuantity(item._id)}
                                         type="button"
-                                        className="flex h-12 w-12 items-center justify-center text-black transition hover:opacity-70 cursor-pointer"
+                                        className="flex h-7 w-7 sm:h-10 sm:w-10 items-center justify-center text-black transition hover:opacity-70 cursor-pointer"
                                     >
-                                        <HiPlusCircle className="h-7 w-7" />
+                                        <HiPlusCircle className="h-5 w-5 sm:h-6 sm:w-6" />
                                     </button>
                                 </div>
 
-                                <div className="flex gap-4 items-center justify-center mt-4 lg:mt-0">
-                                    <p className="font-bold text-lg text-orange-500 w-16 text-right">
+                                <div className="flex gap-2 sm:gap-3 items-center">
+                                    <p className="font-bold text-base sm:text-lg text-orange-500">
                                         ₹{item.price * item.quantity}
                                     </p>
 
                                     <button
                                         onClick={() => removeFromCart(item._id)}
-                                        className="text-gray-400 text-lg hover:text-red-500 transition cursor-pointer"
+                                        className="text-gray-400 text-lg sm:text-xl hover:text-red-500 transition cursor-pointer"
                                     >
                                         <MdDelete/>
                                     </button>

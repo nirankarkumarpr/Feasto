@@ -1,22 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import API from "../api/axios";
-import StatusButton from "../components/DeliveryStatus";
+import { StatusButton, formatDate, formatPaymentMethod } from "../utils/orderUtils.jsx";
 import toast from "react-hot-toast";
-import { MdClose, MdDeliveryDining } from "react-icons/md";
-import { FaChevronRight } from "react-icons/fa6";
+import { MdClose, MdDeliveryDining, MdAccessTimeFilled } from "react-icons/md";
+import { FaChevronRight, FaEye } from "react-icons/fa6";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { HiSquares2X2 } from "react-icons/hi2";
 import PageHeader from "../components/PageHeader";
 
 function Order() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("In Progress");
+  const [filter, setFilter] = useState("All Orders");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const tabsRef = useRef(null);
+
+  const handleFilterChange = (newFilter, event) => {
+    setFilter(newFilter);
+    // Scroll the clicked button into view
+    if (event.currentTarget && tabsRef.current) {
+      event.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  };
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const { data } = await API.get("/orders/my");
-        setOrders(data);
+
+        const sortedOrders = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setOrders(sortedOrders);
       } catch(err) {
         toast.error("Failed to fetch orders!");
       } finally {
@@ -29,18 +42,19 @@ function Order() {
   const inProgressStatuses = ["pending", "confirmed", "preparing", "out_for_delivery"];
 
   const filteredOrders = orders.filter((order) => {
+    if(filter === "All Orders") return true;
     if(filter === "In Progress") return inProgressStatuses.includes(order.status);
     if(filter === "Delivered") return order.status === "delivered";
     if(filter === "Cancelled") return order.status === "cancelled";
     return true;
   });
 
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+  const formatPaymentMethod = (method) => {
+    const methods = {
+      cod: "Cash On Delivery",
+      online: "Online Payment"
+    };
+    return methods[method.toLowerCase()] || method.toUpperCase();
   };
 
   if (loading) {
@@ -52,20 +66,54 @@ function Order() {
       
       <PageHeader icon={MdDeliveryDining} badge="YOUR ORDERS" title="Track your food delivery status" />
 
-      <div className="flex gap-3 mb-6">
-        {["In Progress", "Delivered", "Cancelled"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setFilter(tab)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold border transition cursor-pointer ${
-              filter === tab
-                ? "border-orange-500 text-orange-500 bg-orange-50"
-                : "border-gray-200 text-gray-600 hover:border-orange-300"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div ref={tabsRef} className="flex overflow-x-auto gap-3 mb-6 scrollbar-hide">
+        <button
+          onClick={(e) => handleFilterChange("All Orders", e)}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition cursor-pointer whitespace-nowrap ${
+            filter === "All Orders"
+              ? "bg-orange-500 text-white hover:bg-orange-600"
+              : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+          }`}
+        >
+          <HiSquares2X2 className="w-4 h-4" />
+          <span>All Orders</span>
+        </button>
+
+        <button
+          onClick={(e) => handleFilterChange("In Progress", e)}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition cursor-pointer whitespace-nowrap ${
+            filter === "In Progress"
+              ? "bg-orange-500 text-white hover:bg-orange-600"
+              : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+          }`}
+        >
+          <MdAccessTimeFilled className="w-4 h-4" />
+          <span>In Progress</span>
+        </button>
+
+        <button
+          onClick={(e) => handleFilterChange("Delivered", e)}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition cursor-pointer whitespace-nowrap ${
+            filter === "Delivered"
+              ? "bg-orange-500 text-white hover:bg-orange-600"
+              : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+          }`}
+        >
+          <FaCheckCircle />
+          <span>Delivered</span>
+        </button>
+
+        <button
+          onClick={(e) => handleFilterChange("Cancelled", e)}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition cursor-pointer whitespace-nowrap ${
+            filter === "Cancelled"
+              ? "bg-orange-500 text-white hover:bg-orange-600"
+              : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+          }`}
+        >
+          <FaTimesCircle />
+          <span>Cancelled</span>
+        </button>
       </div>
 
       {filteredOrders.length === 0 ? (
@@ -84,12 +132,11 @@ function Order() {
             <div
               key={order._id}
               onClick={() => setSelectedOrder(order)}
-              className="flex items-center gap-4 p-4 border border-gray-300 rounded-2xl cursor-pointer hover:bg-gray-50 transition"
+              className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_1fr_auto] gap-4 p-4 border border-gray-300 rounded-2xl hover:bg-gray-50 transition cursor-pointer"
             >
 
-              <div className="relative w-24 h-24 mr-2 shrink-0">
-
-                <div className="w-24 h-24 rounded-xl overflow-hidden">
+              <div className="relative w-20 h-20 shrink-0">
+                <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-200">
                   {order.items[0]?.food?.image? (
                     <img
                       src={order.items[0]?.food?.image}
@@ -97,7 +144,7 @@ function Order() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg font-bold">
                       {order.items[0]?.food?.name?.charAt(0)}
                     </div>
                   )}
@@ -108,35 +155,38 @@ function Order() {
                     +{order.items.length - 1}
                   </div>
                 )}
-
               </div>
               
-              <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <StatusButton order={order} />
-                  <span className="text-xs text-gray-400">
-                     {formatDate(order.createdAt)}
-                  </span>
-                </div>
-                
-                <p className="font-bold text-gray-800 text-xs sm:text-sm">
+              <div className="flex flex-col items-start justify-center gap-1 min-w-0">
+                <StatusButton order={order} />
+                <p className="font-bold text-gray-800 text-xs sm:text-sm truncate">
                   Order ID: {order._id.slice(-8).toUpperCase()}
                 </p>
+                <span className="text-xs font-semibold text-gray-500">
+                  {formatDate(order.createdAt)}
+                </span>
+              </div>
 
-                <p className="text-xs text-gray-500 truncate">
+              <div className="flex flex-col justify-center gap-1 min-w-0 col-span-2 sm:col-span-1">
+                <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
                   {order.items[0]?.food?.name}
                   {order.items.length > 1 && ` | ${order.items.length - 1} more item${order.items.length > 2 ? "s" : ""}`}
                 </p>
-
-                <p className="font-bold text-gray-900 text-sm">
-                  ₹{order.totalAmount}
+                <p className="text-xs text-gray-500 truncate">
+                  {formatPaymentMethod(order.paymentMethod)}
                 </p>
-
+                <p className="font-bold text-gray-900 text-sm">₹{order.totalAmount}</p>
               </div>
 
-              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 shrink-0">
-                <FaChevronRight className="w-4 h-4 text-gray-500" />
+              <div className="flex items-center justify-center shrink-0 col-span-3 sm:col-span-1">
+                <button className="sm:hidden w-full px-3 py-2 bg-orange-500 text-white text-xs font-semibold rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-1">
+                  View Details
+                  <FaEye className="w-4 h-4" />
+                </button>
+                
+                <div className="hidden sm:flex w-8 h-8 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200">
+                  <FaChevronRight className="w-4 h-4 text-gray-500" />
+                </div>
               </div>
 
             </div>
@@ -182,7 +232,7 @@ function Order() {
                 </p>
                 <p className="text-gray-700">
                   <span className="font-semibold">Payment: </span>
-                  {selectedOrder.paymentMethod.toUpperCase()}
+                  {formatPaymentMethod(selectedOrder.paymentMethod)}
                 </p>
                 <p className="text-gray-700">
                   <span className="font-semibold">Total: </span>
