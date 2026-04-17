@@ -61,7 +61,11 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab }) {
         <div
           key={order._id}
           className={`grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_1fr_auto] gap-4 p-4 border rounded-2xl hover:bg-gray-50 transition ${
-            activeTab === "available" ? "border-2 border-green-200 bg-green-50 hover:bg-green-100" : "border-gray-300"
+            activeTab === "available" 
+              ? "border-2 border-green-200 bg-green-50 hover:bg-green-100" 
+              : order.status === "cancelled"
+              ? "border-2 border-red-200 bg-red-50 hover:bg-red-100"
+              : "border-gray-300"
           }`}
         >
           

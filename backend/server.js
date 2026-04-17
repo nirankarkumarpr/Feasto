@@ -9,6 +9,7 @@ connectDB();
 const foodRoutes = require("./routes/foodRoutes.js");
 const userRoutes = require("./routes/userRoutes.js");
 const orderRoutes = require("./routes/orderRoutes.js");
+const paymentRoutes = require("./routes/paymentRoutes.js");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
 app.use("/api/foods", foodRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/payment", paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

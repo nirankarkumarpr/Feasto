@@ -7,7 +7,7 @@ router.post("/", protect, createOrder);
 router.get("/my", protect, getMyOrders);
 router.get("/delivery", protect, authorizeRoles("deliveryBoy"), getDeliveryOrders);
 router.get("/", protect, authorizeRoles("admin"), getAllOrders);
-router.put("/:id", protect, authorizeRoles("admin", "deliveryBoy"), updateOrderStatus);
+router.put("/:id", protect, authorizeRoles("admin", "deliveryBoy", "user"), updateOrderStatus);
 router.delete("/:id", protect, authorizeRoles("admin"), deleteOrder);
 
 module.exports = router;

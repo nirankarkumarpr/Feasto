@@ -60,8 +60,22 @@ const updateOrderStatus = async(req, res) => {
             return res.status(404).json({ message: "Order not found!"});
         }
 
+        // Allow customers to cancel their orders (only if pending, confirmed, or preparing)
+        if(req.user.role === "user") {
+            if(order.user.toString() !== req.user._id.toString()) {
+                return res.status(403).json({ message: "Not authorized to update this order!" });
+            }
+            if(status !== "cancelled") {
+                return res.status(403).json({ message: "Customers can only cancel orders!" });
+            }
+            if(!["pending", "confirmed", "preparing"].includes(order.status)) {
+                return res.status(400).json({ message: "Cannot cancel order at this stage!" });
+            }
+            order.status = status;
+        }
+
         // If delivery boy is accepting an order (no deliveryBoy assigned yet)
-        if(req.user.role === "deliveryBoy" && !order.deliveryBoy && deliveryBoy) {
+        else if(req.user.role === "deliveryBoy" && !order.deliveryBoy && deliveryBoy) {
             order.deliveryBoy = deliveryBoy;
             order.status = status;
         }

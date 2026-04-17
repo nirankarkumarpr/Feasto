@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import API from "../api/axios";
 import { StatusButton, formatDate, formatPaymentMethod } from "../utils/orderUtils.jsx";
 import toast from "react-hot-toast";
-import { MdClose, MdDeliveryDining, MdAccessTimeFilled } from "react-icons/md";
+import { MdClose, MdDeliveryDining, MdAccessTimeFilled, MdCancel } from "react-icons/md";
 import { FaChevronRight, FaEye } from "react-icons/fa6";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { HiSquares2X2 } from "react-icons/hi2";
@@ -23,21 +23,34 @@ function Order() {
     }
   };
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const { data } = await API.get("/orders/my");
+  const fetchOrders = async () => {
+    try {
+      const { data } = await API.get("/orders/my");
 
-        const sortedOrders = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setOrders(sortedOrders);
-      } catch(err) {
-        toast.error("Failed to fetch orders!");
-      } finally {
-        setLoading(false);
-      }
-    };
+      const sortedOrders = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setOrders(sortedOrders);
+    } catch(err) {
+      toast.error("Failed to fetch orders!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOrders();
   }, []);
+
+  const handleCancelOrder = async (orderId) => {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+    try {
+      await API.put(`/orders/${orderId}`, { status: "cancelled" });
+      toast.success("Order cancelled successfully!");
+      fetchOrders();
+      setSelectedOrder(null);
+    } catch (err) {
+      toast.error("Failed to cancel order!");
+    }
+  };
 
   const inProgressStatuses = ["pending", "confirmed", "preparing", "out_for_delivery"];
 
@@ -132,7 +145,11 @@ function Order() {
             <div
               key={order._id}
               onClick={() => setSelectedOrder(order)}
-              className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_1fr_auto] gap-4 p-4 border border-gray-300 rounded-2xl hover:bg-gray-50 transition cursor-pointer"
+              className={`grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_1fr_auto] gap-4 p-4 border rounded-2xl transition cursor-pointer ${
+                order.status === "cancelled"
+                  ? "border-2 border-red-200 bg-red-50 hover:bg-red-100"
+                  : "border-gray-300 hover:bg-gray-50"
+              }`}
             >
 
               <div className="relative w-20 h-20 shrink-0">
@@ -275,6 +292,18 @@ function Order() {
                   </div>
                   
                 ))}
+              </div>
+
+              <div className="flex justify-end mt-6">
+                {["pending", "confirmed", "preparing"].includes(selectedOrder.status) && (
+                  <button
+                    onClick={() => handleCancelOrder(selectedOrder._id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 transition flex items-center gap-2 cursor-pointer"
+                  >
+                    <MdCancel className="w-5 h-5" />
+                    Cancel Order
+                  </button>
+                )}
               </div>
             </div>
 

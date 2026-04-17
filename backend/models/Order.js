@@ -47,6 +47,10 @@ const orderSchema = mongoose.Schema({
         enum: ["cod", "online"],
         default: "cod",
     },
+    paymentId: {
+        type: String,
+        default: null,
+    },
 },
 {
     timestamps: true,

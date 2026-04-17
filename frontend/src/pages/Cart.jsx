@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api/axios";
 import toast from "react-hot-toast";
@@ -12,6 +13,7 @@ import PageHeader from "../components/PageHeader";
 
 function Cart() {
     const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity, totalAmount, clearCart } = useCart();
+    const { user } = useAuth();
     const [address, setAddress] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("cod");
     const [loading, setLoading] = useState(false);
@@ -26,27 +28,89 @@ function Cart() {
             return;
         }
 
+        const orderData = {
+            items: cartItems.map((item) => ({
+                food: item._id,
+                quantity: item.quantity,
+                price: item.price,
+            })),
+            address,
+            totalAmount: grandTotal,
+            paymentMethod,
+        };
+
+        if (paymentMethod === "cod") {
+            setLoading(true);
+            try {
+                await API.post("/orders", orderData);
+                clearCart();
+                toast.success("Order placed successfully!");
+                navigate("/orders");
+            } catch (err) {
+                toast.error(err.response?.data?.message || "Order failed!");
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
+
         setLoading(true);
         try {
-            await API.post("/orders", {
-                items: cartItems.map((item) => ({
-                    food: item._id,
-                    quantity: item.quantity,
-                    price: item.price,
-                })),
-                address,
-                paymentMethod,
-                totalAmount: grandTotal,
+            const { data } = await API.post("/payment/create-order", {
+                amount: grandTotal,
             });
 
-            clearCart();
-            toast.success("Order placed successfully!");
-            navigate("/orders");
+            const options = {
+                key: data.keyId,
+                amount: data.amount,
+                currency: data.currency,
+                name: "Feasto",
+                description: "Food Order Payment",
+                order_id: data.orderId,
 
-        } catch(err) {
-            toast.error(err.response?.data?.message || "Failed to place order!");
-        }
-        finally {
+                method: {
+                    upi: true,
+                },
+
+                handler: async (response) => {
+                    try {
+                        await API.post("/payment/verify", {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            orderData,
+                        });
+
+                        clearCart();
+                        toast.success("Order placed successfully!");
+                        navigate("/orders");
+                    } catch (err) {
+                        toast.error("Payment verification failed!");
+                    }
+                },
+
+                prefill: {
+                    name: user.name,
+                    email: user.email,
+                },
+
+                theme: {
+                    color: "#FF6B35",
+                },
+
+                modal: {
+                    ondismiss: () => {
+                        toast.error("Payment cancelled!");
+                        setLoading(false);
+                    },
+                },
+            };
+
+            const razorpay = new window.Razorpay(options);
+            razorpay.open();
+
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Payment failed!");
             setLoading(false);
         }
     };
