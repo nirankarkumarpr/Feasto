@@ -3,18 +3,20 @@ import API from "../../api/axios";
 import toast from "react-hot-toast";
 import { MdEdit } from "react-icons/md";
 import { FaEye, FaCheckCircle } from "react-icons/fa";  
-import { StatusButton, formatDate } from "../../utils/orderUtils.jsx";
+import { StatusButton, formatDate, getStatusName } from "../../utils/orderUtils.jsx";
 
-function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab }) {
+function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdateRef }) {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const handleAcceptOrder = async (orderId) => {
     try {
+      recentUpdateRef.current = orderId; // Mark this order as recently updated
       await API.put(`/orders/${orderId}`, { status: "confirmed" });
       toast.success("Order accepted!");
       fetchData();
     } catch (err) {
+      recentUpdateRef.current = null;
       toast.error("Failed to accept order!");
     }
   };
@@ -22,11 +24,14 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab }) {
   const handleStatusUpdate = async (orderId, newStatus) => {
     setUpdatingStatus(true);
     try {
+      recentUpdateRef.current = orderId; // Mark this order as recently updated
       await API.put(`/orders/${orderId}`, { status: newStatus });
-      toast.success("Order status updated!");
+      const statusName = getStatusName(newStatus);
+      toast.success(`Order updated to ${statusName}`);
       fetchData();
       setOpenDropdown(null);
     } catch (err) {
+      recentUpdateRef.current = null;
       toast.error("Failed to update status!");
     } finally {
       setUpdatingStatus(false);

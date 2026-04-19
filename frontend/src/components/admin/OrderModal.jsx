@@ -8,7 +8,6 @@ function OrderModal({ order, setSelectedOrder, fetchData }) {
     if (!confirm("Are you sure you want to delete this order?")) return;
     try {
       await API.delete(`/orders/${order._id}`);
-      toast.success("Order deleted successfully!");
       fetchData();
       setSelectedOrder(null);
     } catch (err) {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { useSocket } from "../context/SocketContext";
 import API from "../api/axios";
-import { StatusButton, formatDate, formatPaymentMethod } from "../utils/orderUtils.jsx";
+import { StatusButton, formatDate, formatPaymentMethod, getStatusName } from "../utils/orderUtils.jsx";
 import toast from "react-hot-toast";
 import { MdClose, MdDeliveryDining, MdAccessTimeFilled, MdCancel } from "react-icons/md";
 import { FaChevronRight, FaEye } from "react-icons/fa6";
@@ -14,6 +15,7 @@ function Order() {
   const [filter, setFilter] = useState("All Orders");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const tabsRef = useRef(null);
+  const { socket } = useSocket();
 
   const handleFilterChange = (newFilter, event) => {
     setFilter(newFilter);
@@ -40,11 +42,49 @@ function Order() {
     fetchOrders();
   }, []);
 
+  // Socket.io listeners - For real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("orderUpdated", (updatedOrder) => {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === updatedOrder._id ? updatedOrder : order
+        )
+      );
+      
+      if (selectedOrder && selectedOrder._id === updatedOrder._id) {
+        setSelectedOrder(updatedOrder);
+      }
+      
+      const orderId = updatedOrder._id.slice(-8).toUpperCase();
+      const statusName = getStatusName(updatedOrder.status);
+      toast.success(`Your order ${orderId} is now ${statusName}`);
+    });
+
+    socket.on("orderDeleted", (orderId) => {
+      console.log("Order deleted:", orderId);
+      setOrders((prevOrders) =>
+        prevOrders.filter((order) => order._id !== orderId)
+      );
+      
+      if (selectedOrder && selectedOrder._id === orderId) {
+        setSelectedOrder(null);
+      }
+      
+      toast.error(`Order ${orderId.slice(-8).toUpperCase()} has been removed by admin`);
+    });
+
+    return () => {
+      socket.off("orderUpdated");
+      socket.off("orderDeleted");
+    };
+  }, [socket, selectedOrder]);
+
   const handleCancelOrder = async (orderId) => {
     if (!confirm("Are you sure you want to cancel this order?")) return;
     try {
       await API.put(`/orders/${orderId}`, { status: "cancelled" });
-      toast.success("Order cancelled successfully!");
       fetchOrders();
       setSelectedOrder(null);
     } catch (err) {

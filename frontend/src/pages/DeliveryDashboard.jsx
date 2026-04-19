@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useSocket } from "../context/SocketContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
 import { MdDeliveryDining, MdShoppingCart, MdCheckCircle } from "react-icons/md";
@@ -9,15 +10,18 @@ import { HiSquares2X2 } from "react-icons/hi2";
 import PageHeader from "../components/PageHeader";
 import DeliveryOrdersTab from "../components/delivery/DeliveryOrdersTab";
 import DeliveryOrderModal from "../components/delivery/DeliveryOrderModal";
+import { getStatusName } from "../utils/orderUtils";
 
 function DeliveryDashboard() {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState("allorders");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const tabsRef = useRef(null);
   const tabsSectionRef = useRef(null);
+  const recentUpdateRef = useRef(null);
 
   const handleTabChange = (newTab, event) => {
     setActiveTab(newTab);
@@ -55,6 +59,58 @@ function DeliveryDashboard() {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Socket.io listeners - For real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("orderUpdated", (updatedOrder) => {
+      
+      setOrders((prevOrders) => {
+        const orderExists = prevOrders.some(o => o._id === updatedOrder._id);
+        
+        if (orderExists) {
+          if (recentUpdateRef.current !== updatedOrder._id) {
+            const orderId = updatedOrder._id.slice(-8).toUpperCase();
+            const statusName = getStatusName(updatedOrder.status);
+            toast.success(`Order ${orderId} updated to ${statusName}`);
+          } else {
+            recentUpdateRef.current = null;
+          }
+          
+          return prevOrders.map((order) =>
+            order._id === updatedOrder._id ? updatedOrder : order
+          );
+        } else {
+          if (updatedOrder.status === "preparing" && !updatedOrder.deliveryBoy) {
+            if (recentUpdateRef.current !== updatedOrder._id) {
+              toast.success("New order available for delivery!");
+            } else {
+              recentUpdateRef.current = null;
+            }
+            return [updatedOrder, ...prevOrders];
+          }
+          return prevOrders;
+        }
+      });
+    });
+
+    socket.on("orderDeleted", (orderId) => {
+      console.log("Order deleted:", orderId);
+      setOrders((prevOrders) =>
+        prevOrders.filter((order) => order._id !== orderId)
+      );
+      if (selectedOrder && selectedOrder._id === orderId) {
+        setSelectedOrder(null);
+      }
+      toast.error(`Order ${orderId.slice(-8).toUpperCase()} has been removed`);
+    });
+
+    return () => {
+      socket.off("orderUpdated");
+      socket.off("orderDeleted");
+    };
+  }, [socket, selectedOrder]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -203,7 +259,7 @@ function DeliveryDashboard() {
             {loading ? (
               <div className="text-center py-10">Loading...</div>
             ) : (
-              <DeliveryOrdersTab orders={orders} setSelectedOrder={setSelectedOrder} fetchData={fetchOrders} currentUserId={user?._id} activeTab={activeTab} />
+              <DeliveryOrdersTab orders={orders} setSelectedOrder={setSelectedOrder} fetchData={fetchOrders} currentUserId={user?._id} activeTab={activeTab} recentUpdateRef={recentUpdateRef} />
             )}
           </div>
         </div>

@@ -48,3 +48,16 @@ export const formatPaymentMethod = (method) => {
     };
     return methods[method.toLowerCase()] || method.toUpperCase();
 };
+
+// Readable status name
+export const getStatusName = (status) => {
+    const statusNames = {
+        pending: "Pending",
+        confirmed: "Confirmed",
+        preparing: "Being Prepared",
+        out_for_delivery: "Out for Delivery",
+        delivered: "Delivered",
+        cancelled: "Cancelled"
+    };
+    return statusNames[status] || status.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+};

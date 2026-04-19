@@ -53,6 +53,15 @@ const verifyPayment = async (req, res) => {
       paymentId: razorpay_payment_id,
     });
 
+    // Populate order details for socket emission
+    const populatedOrder = await Order.findById(order._id)
+      .populate("user", "name email")
+      .populate("items.food", "name price image");
+
+    // Socket.io - Notify admin about new order
+    const io = req.app.get("io");
+    io.to("admin").emit("newOrder", populatedOrder);
+
     res.status(201).json({
       message: "Payment successful.",
       order,

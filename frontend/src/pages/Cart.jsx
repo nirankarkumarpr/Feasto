@@ -290,7 +290,7 @@ function Cart() {
                         <button
                             onClick={handlePlaceOrder}
                             disabled={loading}
-                            className="flex items-center justify-center gap-2 w-full py-4 rounded-full bg-orange-500 text-white font-semibold text-xl hover:bg-orange-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                            className="flex items-center justify-center gap-2 w-full py-4 rounded-full bg-orange-500 text-white font-semibold text-xl hover:bg-orange-600 transition-colors cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                         >
                             {loading ? "Placing Order..." : paymentMethod === "cod" ? "Place Order" : "Proceed to payment"}
                         </button>

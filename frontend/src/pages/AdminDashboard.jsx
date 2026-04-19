@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSocket } from "../context/SocketContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
 import { MdDashboard, MdShoppingCart, MdRestaurantMenu } from "react-icons/md";
@@ -11,6 +12,7 @@ import FoodModal from "../components/admin/FoodModal";
 import { FaCheckCircle } from "react-icons/fa";
 import { HiSquares2X2 } from "react-icons/hi2";
 import { GoPlusCircle } from "react-icons/go";
+import { getStatusName } from "../utils/orderUtils";
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("allorders");
@@ -28,6 +30,8 @@ function AdminDashboard() {
   });
   const tabsRef = useRef(null);
   const tabsSectionRef = useRef(null);
+  const { socket } = useSocket();
+  const recentUpdateRef = useRef(null);
 
   const handleTabChange = (newTab, event) => {
     setActiveTab(newTab);
@@ -65,6 +69,58 @@ function AdminDashboard() {
   useEffect(() => {
     fetchData();
   }, [activeTab]);
+
+  // Socket.io listeners - For real time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("newOrder", (newOrder) => {
+      setOrders((prevOrders) => [newOrder, ...prevOrders]);
+      toast.success("New order received!");
+    });
+
+    socket.on("orderUpdated", (updatedOrder) => {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === updatedOrder._id ? updatedOrder : order
+        )
+      );
+      
+      if (recentUpdateRef.current === updatedOrder._id) {
+        recentUpdateRef.current = null;
+        return;
+      }
+      
+      const orderId = updatedOrder._id.slice(-8).toUpperCase();
+      const statusName = getStatusName(updatedOrder.status);
+      toast.success(`Order ${orderId} updated to ${statusName}`);
+    });
+
+    socket.on("orderCancelledByUser", (cancelledOrder) => {
+      console.log("Order cancelled by user:", cancelledOrder);
+      toast.error(`Order ${cancelledOrder._id.slice(-8).toUpperCase()} cancelled by ${cancelledOrder.user?.name || 'customer'}!`, {
+        duration: 4000,
+      });
+    });
+
+    socket.on("orderDeleted", (orderId) => {
+      console.log("Order deleted:", orderId);
+      setOrders((prevOrders) =>
+        prevOrders.filter((order) => order._id !== orderId)
+      );
+      if (selectedOrder && selectedOrder._id === orderId) {
+        setSelectedOrder(null);
+      }
+      toast.success(`Order ${orderId.slice(-8).toUpperCase()} has been deleted`);
+    });
+
+    return () => {
+      socket.off("newOrder");
+      socket.off("orderUpdated");
+      socket.off("orderCancelledByUser");
+      socket.off("orderDeleted");
+    };
+  }, [socket, selectedOrder]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -226,7 +282,7 @@ function AdminDashboard() {
             {loading ? (
               <div className="text-center py-10">Loading...</div>
             ) : activeTab === "allorders" || activeTab === "available" || activeTab === "accepted" ? (
-              <OrdersTab orders={orders} setSelectedOrder={setSelectedOrder} fetchData={fetchData} activeTab={activeTab} />
+              <OrdersTab orders={orders} setSelectedOrder={setSelectedOrder} fetchData={fetchData} activeTab={activeTab} recentUpdateRef={recentUpdateRef} />
             ) : (
               <FoodsTab foods={foods} setShowFoodModal={setShowFoodModal} setFoodForm={setFoodForm} fetchData={fetchData} />
             )}

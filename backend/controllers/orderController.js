@@ -21,6 +21,15 @@ const createOrder = async (req, res) => {
             paymentMethod,
         });
 
+        // Populate order details for socket emission
+        const populatedOrder = await Order.findById(order._id)
+            .populate("user", "name email")
+            .populate("items.food", "name price image");
+
+        // Socket.io - Notify admin about new order
+        const io = req.app.get("io");
+        io.to("admin").emit("newOrder", populatedOrder);
+
         res.status(201).json(order);
     } catch(err) {
         res.status(500).json({ message: err.message });
@@ -60,6 +69,8 @@ const updateOrderStatus = async(req, res) => {
             return res.status(404).json({ message: "Order not found!"});
         }
 
+        let userCancelled = false;
+
         // Allow customers to cancel their orders (only if pending, confirmed, or preparing)
         if(req.user.role === "user") {
             if(order.user.toString() !== req.user._id.toString()) {
@@ -72,6 +83,7 @@ const updateOrderStatus = async(req, res) => {
                 return res.status(400).json({ message: "Cannot cancel order at this stage!" });
             }
             order.status = status;
+            userCancelled = true;
         }
 
         // If delivery boy is accepting an order (no deliveryBoy assigned yet)
@@ -94,6 +106,23 @@ const updateOrderStatus = async(req, res) => {
         }
 
         await order.save();
+
+        // Populate order for socket emission
+        const populatedOrder = await Order.findById(order._id)
+            .populate("user", "name email")
+            .populate("items.food", "name price image")
+            .populate("deliveryBoy", "name email");
+
+        // Socket.io - Notify all relevant parties about order update
+        const io = req.app.get("io");
+        
+        if (userCancelled) {
+            io.to("admin").emit("orderCancelledByUser", populatedOrder);
+        }
+        
+        io.to("admin").emit("orderUpdated", populatedOrder);
+        io.to("deliveryBoy").emit("orderUpdated", populatedOrder);
+        io.to("user").emit("orderUpdated", populatedOrder);
 
         res.status(200).json(order);
     } catch(err){
@@ -130,7 +159,15 @@ const deleteOrder = async(req, res) => {
             return res.status(404).json({ message: "Order not found!" });
         }
 
+        const orderId = order._id;
+
         await Order.findByIdAndDelete(req.params.id);
+
+        // Socket.io - Notify all parties about order deletion
+        const io = req.app.get("io");
+        io.to("admin").emit("orderDeleted", orderId);
+        io.to("deliveryBoy").emit("orderDeleted", orderId);
+        io.to("user").emit("orderDeleted", orderId);
 
         res.status(200).json({ message: "Order deleted successfully!" });
     } catch(err){

@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { SocketProvider } from "./context/SocketContext";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -23,50 +24,52 @@ function App() {
 
   return (
     <AuthProvider>
-      <CartProvider>
-        <div className="min-h-screen flex flex-col">
-          {!hideNavbar && <Navbar />}
+      <SocketProvider>
+        <CartProvider>
+          <div className="min-h-screen flex flex-col">
+            {!hideNavbar && <Navbar />}
 
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/menu" element={<Menu />} />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/menu" element={<Menu />} />
 
-              <Route path="/cart" element={
-                <ProtectedRoute>
-                  <Cart />
-                </ProtectedRoute>
-              } />
+                <Route path="/cart" element={
+                  <ProtectedRoute>
+                    <Cart />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/orders" element={
-                <ProtectedRoute>
-                  <Order />
-                </ProtectedRoute>
-              } />
+                <Route path="/orders" element={
+                  <ProtectedRoute>
+                    <Order />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/admin" element={
-                <ProtectedRoute roles={["admin"]}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
+                <Route path="/admin" element={
+                  <ProtectedRoute roles={["admin"]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/delivery" element={
-                <ProtectedRoute roles={["deliveryBoy"]}>
-                  <DeliveryDashboard />
-                </ProtectedRoute>
-              } />
+                <Route path="/delivery" element={
+                  <ProtectedRoute roles={["deliveryBoy"]}>
+                    <DeliveryDashboard />
+                  </ProtectedRoute>
+                } />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
 
-          {!hideFooter && <Footer />}
-          
-          <CartNotification />
-        </div>
-      </CartProvider>
+            {!hideFooter && <Footer />}
+            
+            <CartNotification />
+          </div>
+        </CartProvider>
+      </SocketProvider>
     </AuthProvider>
   );
 }
