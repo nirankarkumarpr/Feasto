@@ -10,17 +10,18 @@ The application follows MVC architecture and provides a responsive user interfac
 
 ## Features
 
-* User authentication using JWT (Login and Registration)
-* Role-based authorization (Admin, User, Delivery Boy)
-* Browse food menu and add items to cart
+* User authentication and role-based authorization (Admin, User, Delivery Boy)
+* Browse food menu, manage cart, and place orders
 * Secure online payment integration using Razorpay
-* Real-time order tracking with multiple status stages
-* Admin dashboard for order and menu management
-* Delivery dashboard for updating delivery status
-* Protected routes for secure navigation
+* Interactive map-based delivery location selection with address search
+* Real-time order tracking with live delivery location updates
+* Automatic geolocation and route visualization with distance/ETA calculation
+* Socket.io powered real-time notifications for all order updates
+* Admin dashboard with menu management and revenue tracking
+* Delivery dashboard with commission-based earnings system
+* Customer order cancellation and cart notifications
 * Image upload and storage using Cloudinary
-* Responsive and modern UI using Tailwind CSS
-* Global state management using React Context API
+* Responsive UI with Tailwind CSS and Context API state management
 
 ---
 
@@ -33,6 +34,10 @@ The application follows MVC architecture and provides a responsive user interfac
 * React Router DOM
 * Axios
 * Context API
+* Socket.io Client
+* Leaflet (Interactive Maps)
+* Leaflet Routing Machine (Route Visualization)
+* React Hot Toast (Notifications)
 
 ### Backend
 
@@ -41,6 +46,7 @@ The application follows MVC architecture and provides a responsive user interfac
 * MongoDB
 * JWT Authentication
 * MVC Architecture
+* Socket.io (Real-time Communication)
 * Cloudinary (Image Upload and Storage)
 
 ### Payment Gateway
@@ -53,9 +59,9 @@ The application follows MVC architecture and provides a responsive user interfac
 
 The application supports three roles:
 
-* User – Browse menu, add items to cart, place orders
-* Admin – Manage menu items and monitor orders
-* Delivery Boy – Update delivery status
+* User – Browse menu, add items to cart, place orders, track live delivery, cancel orders
+* Admin – Manage menu items, monitor orders, track live delivery, view total revenue 
+* Delivery Boy – Accept orders, update delivery status, automatic location sharing, view total earnings
 
 ---
 
@@ -76,6 +82,9 @@ The system supports multiple order stages:
 
 * Email notifications
 * Order history analytics
-* Real-time notifications
+* SMS notifications for order updates
 * Dark mode UI
-* Admin analytics dashboard
+* Admin analytics dashboard with charts
+* Customer ratings and reviews
+* Multi-restaurant support
+* Promo codes and discounts
