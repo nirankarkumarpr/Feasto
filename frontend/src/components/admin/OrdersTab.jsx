@@ -24,7 +24,7 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdat
   const handleStatusUpdate = async (orderId, newStatus) => {
     setUpdatingStatus(true);
     try {
-      recentUpdateRef.current = orderId; // Mark this order as recently updated
+      recentUpdateRef.current = orderId;
       await API.put(`/orders/${orderId}`, { status: newStatus });
       const statusName = getStatusName(newStatus);
       toast.success(`Order updated to ${statusName}`);
@@ -39,15 +39,23 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdat
   };
 
   const availableOrders = orders.filter(o => o.status === "pending");
-  const acceptedOrders = orders.filter(o => o.status !== "pending" && o.status !== "cancelled");
+  const acceptedOrders = orders.filter(o => o.status !== "pending" && o.status !== "cancelled" && o.status !== "delivered");
+  const deliveredOrders = orders.filter(o => o.status === "delivered");
   
-  const displayOrders = activeTab === "allorders" ? orders : (activeTab === "available" ? availableOrders : acceptedOrders);
+  const displayOrders = 
+    activeTab === "allorders" ? orders : 
+    activeTab === "available" ? availableOrders : 
+    activeTab === "delivered" ? deliveredOrders :
+    acceptedOrders;
 
   if (displayOrders.length === 0) {
     return(
       <div className="text-center py-20">
         <h2 className="text-xl font-semibold text-gray-700">
-          {activeTab === "allorders" ? "No orders yet!" : (activeTab === "available" ? "No available orders!" : "No accepted orders!")}
+          {activeTab === "allorders" ? "No orders yet!" : 
+           activeTab === "available" ? "No available orders!" : 
+           activeTab === "delivered" ? "No delivered orders yet!" :
+           "No accepted orders!"}
         </h2>
         <p className="text-gray-500 mt-2">
           {activeTab === "allorders" 
@@ -65,7 +73,8 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdat
       {displayOrders.map((order) => (
         <div
           key={order._id}
-          className={`grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_1fr_auto] gap-4 p-4 border rounded-2xl hover:bg-gray-50 transition ${
+          onClick={() => setSelectedOrder(order)}
+          className={`grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_1fr_auto] gap-4 p-4 border rounded-2xl hover:bg-gray-50 transition cursor-pointer ${
             activeTab === "available" 
               ? "border-2 border-green-200 bg-green-50 hover:bg-green-100" 
               : order.status === "cancelled"
@@ -110,7 +119,7 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdat
               {order.items.length > 1 && ` | ${order.items.length - 1} more item${order.items.length > 2 ? "s" : ""}`}
             </p>
             <p className="text-xs text-gray-500 truncate">
-              {order.address}
+              {order.deliveryAddress?.mapAddress?.split(",").slice(0, 2).join(",") || "N/A"}
             </p>
             <p className="font-bold text-gray-900 text-sm">₹{order.totalAmount}</p>
           </div>
@@ -119,16 +128,22 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdat
             
             {activeTab === "available" ? (
               <button
-                onClick={() => handleAcceptOrder(order._id)}
-                className="px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAcceptOrder(order._id);
+                }}
+                className="w-full px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 Accept Order
                 <FaCheckCircle className="w-4 h-4" />
               </button>
             ) : activeTab === "allorders" && order.status === "pending" ? (
               <button
-                onClick={() => handleAcceptOrder(order._id)}
-                className="px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAcceptOrder(order._id);
+                }}
+                className="w-full px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 Accept Order
                 <FaCheckCircle className="w-4 h-4" />
@@ -136,8 +151,11 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdat
             ) : (activeTab === "accepted" || (activeTab === "allorders" && order.status !== "pending")) ? (
               <div className="relative">
                 <button
-                  onClick={() => setOpenDropdown(openDropdown === order._id ? null : order._id)}
-                  className="w-full px-3 py-2 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-1 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenDropdown(openDropdown === order._id ? null : order._id);
+                  }}
+                  className="w-full px-4 py-2 bg-blue-500 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Update Status
                   <MdEdit className="w-4 h-4" />
@@ -147,7 +165,10 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdat
                   <>
                     <div 
                       className="fixed inset-0 z-10" 
-                      onClick={() => setOpenDropdown(null)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(null);
+                      }}
                     />
 
                     <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
@@ -157,7 +178,10 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdat
                         {["pending", "confirmed", "preparing", "out_for_delivery", "delivered", "cancelled"].map((status) => (
                           <button
                             key={status}
-                            onClick={() => handleStatusUpdate(order._id, status)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStatusUpdate(order._id, status);
+                            }}
                             disabled={updatingStatus || order.status === status}
                             className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center transition cursor-pointer ${
                               order.status === status ? "bg-gray-100 cursor-not-allowed opacity-50" : ""
@@ -174,8 +198,11 @@ function OrdersTab({ orders, setSelectedOrder, fetchData, activeTab, recentUpdat
             ) : null}
 
             <button
-              onClick={() => setSelectedOrder(order)}
-              className="px-3 py-2 bg-orange-500 text-white text-xs font-semibold rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-1 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedOrder(order);
+              }}
+              className="w-full px-4 py-2 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-2 cursor-pointer"
             >
               View Details
               <FaEye className="w-4 h-4" />

@@ -17,8 +17,6 @@ export const SocketProvider = ({ children }) => {
         });
 
         newSocket.on("connect", () => {
-            console.log("Socket connected:", newSocket.id);
-            
             if (user?.role) {
                 newSocket.emit("join", user.role);
             }
@@ -29,7 +27,7 @@ export const SocketProvider = ({ children }) => {
         });
 
         newSocket.on("disconnect", () => {
-            console.log("Socket disconnected");
+            // Disconnected
         });
 
         setSocket(newSocket);

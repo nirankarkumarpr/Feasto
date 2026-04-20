@@ -29,3 +29,12 @@
 *{
   font-family: "Open Sans", sans-serif !important;
 }
+
+/* Hide leaflet routing machine attribution logos */
+.leaflet-routing-container {
+  display: none !important;
+}
+
+.leaflet-control-container .leaflet-routing-container {
+  display: none !important;
+}

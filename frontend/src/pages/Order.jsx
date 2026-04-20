@@ -4,16 +4,19 @@ import API from "../api/axios";
 import { StatusButton, formatDate, formatPaymentMethod, getStatusName } from "../utils/orderUtils.jsx";
 import toast from "react-hot-toast";
 import { MdClose, MdDeliveryDining, MdAccessTimeFilled, MdCancel } from "react-icons/md";
-import { FaChevronRight, FaEye } from "react-icons/fa6";
+import { FaEye } from "react-icons/fa6";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { HiSquares2X2 } from "react-icons/hi2";
+import { MdMyLocation } from "react-icons/md";
 import PageHeader from "../components/PageHeader";
+import LiveTrackingModal from "../components/LiveTrackingModal";
 
 function Order() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All Orders");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [trackingOrder, setTrackingOrder] = useState(null);
   const tabsRef = useRef(null);
   const { socket } = useSocket();
 
@@ -57,19 +60,26 @@ function Order() {
         setSelectedOrder(updatedOrder);
       }
       
+      if (trackingOrder && trackingOrder._id === updatedOrder._id) {
+        setTrackingOrder(updatedOrder);
+      }
+      
       const orderId = updatedOrder._id.slice(-8).toUpperCase();
       const statusName = getStatusName(updatedOrder.status);
       toast.success(`Your order ${orderId} is now ${statusName}`);
     });
 
     socket.on("orderDeleted", (orderId) => {
-      console.log("Order deleted:", orderId);
       setOrders((prevOrders) =>
         prevOrders.filter((order) => order._id !== orderId)
       );
       
       if (selectedOrder && selectedOrder._id === orderId) {
         setSelectedOrder(null);
+      }
+      
+      if (trackingOrder && trackingOrder._id === orderId) {
+        setTrackingOrder(null);
       }
       
       toast.error(`Order ${orderId.slice(-8).toUpperCase()} has been removed by admin`);
@@ -79,7 +89,7 @@ function Order() {
       socket.off("orderUpdated");
       socket.off("orderDeleted");
     };
-  }, [socket, selectedOrder]);
+  }, [socket, selectedOrder, trackingOrder]);
 
   const handleCancelOrder = async (orderId) => {
     if (!confirm("Are you sure you want to cancel this order?")) return;
@@ -235,15 +245,30 @@ function Order() {
                 <p className="font-bold text-gray-900 text-sm">₹{order.totalAmount}</p>
               </div>
 
-              <div className="flex items-center justify-center shrink-0 col-span-3 sm:col-span-1">
-                <button className="sm:hidden w-full px-3 py-2 bg-orange-500 text-white text-xs font-semibold rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-1">
+              <div className="flex flex-col items-center justify-center gap-2 shrink-0 col-span-3 sm:col-span-1">
+                {order.status === 'out_for_delivery' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTrackingOrder(order);
+                    }}
+                    className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    Track Order
+                    <MdMyLocation className="w-4 h-4" />
+                  </button>
+                )}
+                
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedOrder(order);
+                  }}
+                  className="w-full sm:w-auto px-4 py-2 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-2 cursor-pointer"
+                >
                   View Details
                   <FaEye className="w-4 h-4" />
                 </button>
-                
-                <div className="hidden sm:flex w-8 h-8 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200">
-                  <FaChevronRight className="w-4 h-4 text-gray-500" />
-                </div>
               </div>
 
             </div>
@@ -285,8 +310,20 @@ function Order() {
               <div className="space-y-2 mb-4 text-sm">
                 <p className="text-gray-700">
                   <span className="font-semibold">Address: </span>
-                  {selectedOrder.address}
+                  {selectedOrder.deliveryAddress?.mapAddress || "N/A"}
                 </p>
+                {selectedOrder.deliveryAddress?.houseNo && (
+                  <p className="text-gray-700">
+                    <span className="font-semibold">House/Building No: </span>
+                    {selectedOrder.deliveryAddress.houseNo}
+                  </p>
+                )}
+                {selectedOrder.deliveryAddress?.landmark && (
+                  <p className="text-gray-700">
+                    <span className="font-semibold">Landmark: </span>
+                    {selectedOrder.deliveryAddress.landmark}
+                  </p>
+                )}
                 <p className="text-gray-700">
                   <span className="font-semibold">Payment: </span>
                   {formatPaymentMethod(selectedOrder.paymentMethod)}
@@ -295,6 +332,12 @@ function Order() {
                   <span className="font-semibold">Total: </span>
                   <span className="text-orange-500 font-bold">₹{selectedOrder.totalAmount}</span>
                 </p>
+                {selectedOrder.deliveryBoy && (
+                  <p className="text-gray-700">
+                    <span className="font-semibold">Delivery Partner: </span>
+                    {selectedOrder.deliveryBoy.name}
+                  </p>
+                )}
               </div>
 
               <div className="border-t opacity-10"/>
@@ -349,6 +392,14 @@ function Order() {
 
           </div>
         </div>
+      )}
+
+      {/* Live Tracking Modal */}
+      {trackingOrder && (
+        <LiveTrackingModal
+          order={trackingOrder}
+          onClose={() => setTrackingOrder(null)}
+        />
       )}
 
       </div>

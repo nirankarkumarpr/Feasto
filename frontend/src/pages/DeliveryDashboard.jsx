@@ -11,6 +11,7 @@ import PageHeader from "../components/PageHeader";
 import DeliveryOrdersTab from "../components/delivery/DeliveryOrdersTab";
 import DeliveryOrderModal from "../components/delivery/DeliveryOrderModal";
 import { getStatusName } from "../utils/orderUtils";
+import { watchLocation, stopWatchingLocation, getCurrentLocation } from "../utils/mapUtils";
 
 function DeliveryDashboard() {
   const { user } = useAuth();
@@ -22,37 +23,39 @@ function DeliveryDashboard() {
   const tabsRef = useRef(null);
   const tabsSectionRef = useRef(null);
   const recentUpdateRef = useRef(null);
+  const locationWatchIdRef = useRef(null);
+  const activeOrderIdRef = useRef(null);
 
   const handleTabChange = (newTab, event) => {
     setActiveTab(newTab);
     
-    // Scroll to tabs section on mobile
-    if (tabsSectionRef.current) {
-      setTimeout(() => {
-        tabsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
-    
     // If clicked from tab button, scroll that button into view
     if (event && event.currentTarget && tabsRef.current) {
-      setTimeout(() => {
-        event.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }, 200);
-    } else if (tabsRef.current) {
-      // If clicked from stat card, find and scroll the corresponding tab button
-      setTimeout(() => {
-        const buttons = tabsRef.current.querySelectorAll('button');
-        const tabMap = {
-          'allorders': 0,
-          'available': 1,
-          'mydeliveries': 2,
-          'delivered': 3
-        };
-        const buttonIndex = tabMap[newTab];
-        if (buttons[buttonIndex]) {
-          buttons[buttonIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        }
-      }, 200);
+      event.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    } else {
+      // If clicked from stat card, scroll to tabs section and center the corresponding button
+      if (tabsSectionRef.current) {
+        setTimeout(() => {
+          tabsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+      
+      // Find and scroll the corresponding tab button to center
+      if (tabsRef.current) {
+        setTimeout(() => {
+          const buttons = tabsRef.current.querySelectorAll('button');
+          const tabMap = {
+            'allorders': 0,
+            'available': 1,
+            'mydeliveries': 2,
+            'delivered': 3
+          };
+          const buttonIndex = tabMap[newTab];
+          if (buttons[buttonIndex]) {
+            buttons[buttonIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }, 300);
+      }
     }
   };
 
@@ -60,12 +63,77 @@ function DeliveryDashboard() {
     fetchOrders();
   }, []);
 
-  // Socket.io listeners - For real-time updates
+  // Socket.io listeners - For real-time updates AND location sharing
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      return;
+    }
+    
+    if (!user) {
+      return;
+    }
 
     socket.on("orderUpdated", (updatedOrder) => {
+      const isMyOrder = updatedOrder.deliveryBoy?._id === user?._id || updatedOrder.deliveryBoy === user?._id;
       
+      // Start location sharing when order becomes "out_for_delivery" and assigned to delivery boy
+      if (isMyOrder && updatedOrder.status === 'out_for_delivery') {
+        // Only start if not already sharing for this order
+        if (activeOrderIdRef.current !== updatedOrder._id) {
+          if (locationWatchIdRef.current !== null) {
+            stopWatchingLocation(locationWatchIdRef.current);
+            locationWatchIdRef.current = null;
+          }
+
+          // Start new location sharing
+          getCurrentLocation()
+            .then(async (initialLocation) => {
+              try {
+                await API.put(`/orders/${updatedOrder._id}/delivery-location`, {
+                  lat: initialLocation.lat,
+                  lng: initialLocation.lng
+                });
+              } catch (error) {
+                console.error('[DeliveryDashboard] Failed to send initial location:', error);
+              }
+            })
+            .catch((error) => {
+              console.error('[DeliveryDashboard] Failed to get initial location:', error);
+            });
+          
+          // Then start watching for continuous updates
+          const watchId = watchLocation(
+            async (location) => {
+              try {
+                await API.put(`/orders/${updatedOrder._id}/delivery-location`, {
+                  lat: location.lat,
+                  lng: location.lng
+                });
+              } catch (error) {
+                console.error('[DeliveryDashboard] Failed to update location:', error);
+              }
+            },
+            (error) => {
+              console.error('[DeliveryDashboard] Location error:', error);
+            }
+          );
+
+          locationWatchIdRef.current = watchId;
+          activeOrderIdRef.current = updatedOrder._id;
+        }
+      }
+      
+      // Stop location sharing when order is delivered or cancelled
+      if (activeOrderIdRef.current === updatedOrder._id && 
+          (updatedOrder.status === 'delivered' || updatedOrder.status === 'cancelled')) {
+        if (locationWatchIdRef.current !== null) {
+          stopWatchingLocation(locationWatchIdRef.current);
+          locationWatchIdRef.current = null;
+          activeOrderIdRef.current = null;
+        }
+      }
+      
+      // Then update orders state
       setOrders((prevOrders) => {
         const orderExists = prevOrders.some(o => o._id === updatedOrder._id);
         
@@ -82,21 +150,30 @@ function DeliveryDashboard() {
             order._id === updatedOrder._id ? updatedOrder : order
           );
         } else {
-          if (updatedOrder.status === "preparing" && !updatedOrder.deliveryBoy) {
+          // Check if this is a new order that should be visible to delivery boy
+          const isMyOrder = updatedOrder.deliveryBoy?._id === user?._id || updatedOrder.deliveryBoy === user?._id;
+          const isAvailableOrder = updatedOrder.status === "preparing" && !updatedOrder.deliveryBoy;
+          
+          if (isMyOrder || isAvailableOrder) {
             if (recentUpdateRef.current !== updatedOrder._id) {
-              toast.success("New order available for delivery!");
+              if (isAvailableOrder) {
+                toast.success("New order available for delivery!");
+              } else {
+                const orderId = updatedOrder._id.slice(-8).toUpperCase();
+                toast.success(`Order ${orderId} assigned to you!`);
+              }
             } else {
               recentUpdateRef.current = null;
             }
             return [updatedOrder, ...prevOrders];
           }
+          
           return prevOrders;
         }
       });
     });
 
     socket.on("orderDeleted", (orderId) => {
-      console.log("Order deleted:", orderId);
       setOrders((prevOrders) =>
         prevOrders.filter((order) => order._id !== orderId)
       );
@@ -110,7 +187,46 @@ function DeliveryDashboard() {
       socket.off("orderUpdated");
       socket.off("orderDeleted");
     };
-  }, [socket, selectedOrder]);
+  }, [socket, selectedOrder, user]);
+
+  // Resume location sharing on mount if there's an active delivery
+  useEffect(() => {
+    const activeDelivery = orders.find(
+      o => (o.deliveryBoy?._id === user?._id || o.deliveryBoy === user?._id) && 
+           o.status === 'out_for_delivery'
+    );
+
+    if (activeDelivery && locationWatchIdRef.current === null) {
+      const watchId = watchLocation(
+        async (location) => {
+          try {
+            await API.put(`/orders/${activeDelivery._id}/delivery-location`, {
+              lat: location.lat,
+              lng: location.lng
+            });
+          } catch (error) {
+            console.error('[DeliveryDashboard] Failed to update location:', error);
+          }
+        },
+        (error) => {
+          console.error('[DeliveryDashboard] Location error:', error);
+        }
+      );
+
+      locationWatchIdRef.current = watchId;
+      activeOrderIdRef.current = activeDelivery._id;
+    }
+  }, [orders, user]);
+
+  // Cleanup location sharing on unmount
+  useEffect(() => {
+    return () => {
+      if (locationWatchIdRef.current !== null) {
+        stopWatchingLocation(locationWatchIdRef.current);
+        locationWatchIdRef.current = null;
+      }
+    };
+  }, []);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -204,7 +320,6 @@ function DeliveryDashboard() {
         </div>
 
         <div ref={tabsSectionRef} className="bg-white">
-          
           <div ref={tabsRef} className="flex overflow-x-auto gap-3 p-2 mb-6 scrollbar-hide">
             <button
               onClick={(e) => handleTabChange("allorders", e)}

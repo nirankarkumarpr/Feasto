@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import App from "./App.jsx";
 import "./index.css";
+import "leaflet/dist/leaflet.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

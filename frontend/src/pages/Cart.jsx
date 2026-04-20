@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -6,15 +6,21 @@ import API from "../api/axios";
 import toast from "react-hot-toast";
 import { MdDelete, MdShoppingCart } from "react-icons/md";
 import { HiPlusCircle, HiMinusCircle } from "react-icons/hi2";
-import { FaCreditCard } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
+import { FaCreditCard } from "react-icons/fa";
 import { BsCashStack } from "react-icons/bs";
 import PageHeader from "../components/PageHeader";
+import LocationPicker from "../components/map/LocationPicker";
 
 function Cart() {
     const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity, totalAmount, clearCart } = useCart();
     const { user } = useAuth();
     const [address, setAddress] = useState("");
+    const [houseNo, setHouseNo] = useState("");
+    const [landmark, setLandmark] = useState("");
+    const [customerName, setCustomerName] = useState(user?.name || "");
+    const [mobile, setMobile] = useState("");
+    const [locationData, setLocationData] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState("cod");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -22,9 +28,28 @@ function Cart() {
     const deliveryCharge = 40;
     const grandTotal = totalAmount + deliveryCharge;
     
+    useEffect(() => {
+        const savedLocation = localStorage.getItem('userLocation');
+        if (savedLocation) {
+            const location = JSON.parse(savedLocation);
+            setLocationData(location);
+            if (location.address) {
+                setAddress(location.address);
+            }
+        }
+    }, []);
+    
+    const handleLocationSelect = (location) => {
+        setLocationData(location);
+        if (location.address) {
+            setAddress(location.address);
+        }
+        localStorage.setItem('userLocation', JSON.stringify(location));
+    };
+    
     const handlePlaceOrder = async () => {
-        if(!address) {
-            toast.error("Please enter delivery address!");
+        if(!address || !houseNo || !customerName || !mobile || !locationData) {
+            toast.error("Please fill all required fields!");
             return;
         }
 
@@ -34,9 +59,22 @@ function Cart() {
                 quantity: item.quantity,
                 price: item.price,
             })),
-            address,
             totalAmount: grandTotal,
             paymentMethod,
+            customerName,
+            mobile,
+            deliveryAddress: {
+                street: locationData.street || '',
+                city: locationData.city || '',
+                postalCode: locationData.postalCode || '',
+                mapAddress: address,
+                houseNo,
+                landmark,
+                coordinates: {
+                    lat: locationData.lat,
+                    lng: locationData.lng
+                }
+            }
         };
 
         if (paymentMethod === "cod") {
@@ -139,7 +177,8 @@ function Cart() {
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 
-                <div className="lg:col-span-3 space-y-4">
+                {/*Food details*/}
+                <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-12 lg:self-start">
                     {cartItems.map((item) => (
                         <div 
                             key={item._id}
@@ -202,7 +241,7 @@ function Cart() {
                     ))}
                 </div>
             
-
+                {/*Address & Payment*/}
                 <div className="lg:col-span-2 space-y-6">
                     
                     <div className="bg-white rounded-2xl p-6 shadow-[0_0_20px_rgba(15,23,50,0.10)]">
@@ -226,64 +265,118 @@ function Cart() {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-6 shadow-[0_0_20px_rgba(15,23,50,0.10)] lg:sticky lg:top-24">
+                    <div className="bg-white rounded-2xl p-6 shadow-[0_0_20px_rgba(15,23,50,0.10)]">
 
-                        <div className="mb-6">
-                            <label className="flex items-center gap-1 text-sm font-semibold text-gray-700 mb-3">
+                        <div className="mb-4">
+                            <label className="flex items-center gap-1 text-sm font-semibold text-gray-700 mb-2">
                                 <FaLocationDot className="text-orange-500 text-md"/>
-                                Delivery Address
+                                Delivery Location
                             </label>
-                            <textarea
-                                value={address}
-                                onChange={(e) => setAddress(e.target.value)}
-                                placeholder="Enter your complete delivery address (House/Flat No., Street, Area, City, Pincode)"
-                                rows="4"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition resize-none text-gray-700"
+                            <LocationPicker 
+                                onLocationSelect={handleLocationSelect}
+                                initialLocation={locationData}
+                                height="300px"
                             />
                         </div>
 
-                        <div className="mb-6">
-                            <div className="space-y-3">
-                                <label
-                                    className={`w-full p-4 border-2 rounded-lg transition-all duration-200 flex items-center gap-3 cursor-pointer ${
+                        <div className="mb-3">
+                            <label className="text-sm font-semibold text-gray-700 mb-1.5 block">
+                                Selected Address <span className="text-red-500">*</span>
+                            </label>
+                            <div className="p-2.5 bg-orange-50 border border-orange-200 rounded-lg min-h-[60px] flex items-center">
+                                {address ? (
+                                    <p className="text-sm text-gray-800">{address}</p>
+                                ) : (
+                                    <p className="text-sm text-gray-400 italic">Please select a location from the map above</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="text-sm font-semibold text-gray-700 mb-1.5 block">
+                                House No / Building No <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={houseNo}
+                                onChange={(e) => setHouseNo(e.target.value)}
+                                placeholder="Enter house/flat/building number"
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition text-gray-700"
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="text-sm font-semibold text-gray-700 mb-1.5 block">
+                                Nearby Landmark (Optional)
+                            </label>
+                            <input
+                                type="text"
+                                value={landmark}
+                                onChange={(e) => setLandmark(e.target.value)}
+                                placeholder="E.g., Near City Mall, Opposite Park"
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition text-gray-700"
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="text-sm font-semibold text-gray-700 mb-1.5 block">
+                                Your Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={customerName}
+                                onChange={(e) => setCustomerName(e.target.value)}
+                                placeholder="Enter your name"
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition text-gray-700"
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="text-sm font-semibold text-gray-700 mb-1.5 block">
+                                Mobile Number <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="tel"
+                                value={mobile}
+                                onChange={(e) => setMobile(e.target.value)}
+                                placeholder="Enter your mobile number"
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition text-gray-700"
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="text-sm font-semibold text-gray-700 mb-2 block">Payment Method</label>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentMethod("cod")}
+                                    className={`p-3 border-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                                         paymentMethod === "cod" 
                                             ? "border-orange-500 bg-orange-50 text-orange-700" 
                                             : "border-gray-300 bg-white text-gray-700 hover:border-orange-300"
                                     }`}
                                 >
-                                    <BsCashStack className="text-2xl" />
+                                    <BsCashStack className="text-xl shrink-0" />
                                     <div className="text-left flex-1">
-                                        <p className="font-semibold">Cash on Delivery</p>
+                                        <p className="font-semibold text-sm">Cash on Delivery</p>
                                         <p className="text-xs opacity-75">Pay when you receive</p>
                                     </div>
-                                    <input
-                                        type="radio"
-                                        name="paymentMethod"
-                                        checked={paymentMethod === "cod"}
-                                        onChange={() => setPaymentMethod("cod")}
-                                        className="w-5 h-5 accent-orange-500 cursor-pointer rounded-full appearance-none border-2 border-gray-300 checked:bg-orange-500 checked:border-orange-500"
-                                    />
-                                </label>
-                                <label
-                                    className={`w-full p-4 border-2 rounded-lg transition-all duration-200 flex items-center gap-3 cursor-pointer ${
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentMethod("online")}
+                                    className={`p-3 border-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                                         paymentMethod === "online" 
                                             ? "border-orange-500 bg-orange-50 text-orange-700" 
                                             : "border-gray-300 bg-white text-gray-700 hover:border-orange-300"
                                     }`}
                                 >
-                                    <FaCreditCard className="text-2xl" />
+                                    <FaCreditCard className="text-xl shrink-0" />
                                     <div className="text-left flex-1">
-                                        <p className="font-semibold">Online Payment</p>
+                                        <p className="font-semibold text-sm">Online Payment</p>
                                         <p className="text-xs opacity-75">UPI, Card, Net Banking</p>
                                     </div>
-                                    <input
-                                        type="radio"
-                                        name="paymentMethod"
-                                        checked={paymentMethod === "online"}
-                                        onChange={() => setPaymentMethod("online")}
-                                        className="w-5 h-5 accent-orange-500 cursor-pointer rounded-full appearance-none border-2 border-gray-300 checked:bg-orange-500 checked:border-orange-500"
-                                    />
-                                </label>
+                                </button>
                             </div>
                         </div>
 
