@@ -36,7 +36,6 @@ const createFood = async (req, res) => {
         
         res.status(201).json(food);
     } catch (err) {
-        console.error("Error creating food:", err);
         res.status(500).json({ message: err.message });
     }
 };

@@ -26,16 +26,23 @@ const io = socketIo(server, {
 
 // Socket.io connection handler
 io.on("connection", (socket) => {
-    console.log("New client connected:", socket.id);
-
     // User joins a room based on their role
     socket.on("join", (role) => {
         socket.join(role);
-        console.log(`User joined ${role} room`);
+    });
+
+    // Join order-specific room for tracking
+    socket.on("joinOrderRoom", (orderId) => {
+        socket.join(`order-${orderId}`);
+    });
+
+    // Leave order-specific room
+    socket.on("leaveOrderRoom", (orderId) => {
+        socket.leave(`order-${orderId}`);
     });
 
     socket.on("disconnect", () => {
-        console.log("Client disconnected:", socket.id);
+        // Client disconnected
     });
 });
 

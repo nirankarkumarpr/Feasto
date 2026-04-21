@@ -28,9 +28,46 @@ const orderSchema = mongoose.Schema({
         type: Number,
         required: true,
     },
-    address: {
+    customerName: {
         type: String,
         required: true,
+    },
+    mobile: {
+        type: String,
+        required: true,
+    },
+    deliveryAddress: {
+        street: String,
+        city: String,
+        postalCode: String,
+        houseNo: String,
+        landmark: String,
+        mapAddress: String,
+        coordinates: {
+            lat: {
+                type: Number,
+                min: -90,
+                max: 90,
+            },
+            lng: {
+                type: Number,
+                min: -180,
+                max: 180,
+            }
+        }
+    },
+    deliveryLocation: {
+        lat: {
+            type: Number,
+            min: -90,
+            max: 90,
+        },
+        lng: {
+            type: Number,
+            min: -180,
+            max: 180,
+        },
+        timestamp: Date,
     },
     status: {
         type: String,
@@ -55,6 +92,9 @@ const orderSchema = mongoose.Schema({
 {
     timestamps: true,
 });
+
+orderSchema.index({ 'deliveryAddress.coordinates': '2dsphere' });
+orderSchema.index({ status: 1, createdAt: -1 });
 
 const Order = mongoose.model("Order", orderSchema);
 
