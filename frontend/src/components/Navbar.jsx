@@ -7,6 +7,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import logo from "../assets/logo.png";
 import { useState, useEffect, useRef } from "react";
 import LocationPicker from "./map/LocationPicker";
+import toast from "react-hot-toast";
 
 function Navbar() {
     const { user, logout } = useAuth();
@@ -43,6 +44,7 @@ function Navbar() {
     const handleLogout = () => {
         logout();
         clearCart();
+        toast.success("Logged out successfully!");
         navigate("/");
         setIsMobileMenuOpen(false);
     };
@@ -186,7 +188,7 @@ function Navbar() {
                 {user && user.role === "deliveryBoy" && (
                     <Link to="/delivery" className="flex items-center gap-1 text-gray-600 hover:text-orange-500 transition font-medium text-md">
                         <MdDeliveryDining className="text-2xl" />
-                        My Deliveries
+                        Deliveries
                     </Link>
                 )}
 
@@ -269,7 +271,7 @@ function Navbar() {
                         {user && user.role === "deliveryBoy" && (
                             <Link to="/delivery" onClick={closeMobileMenu} className="flex items-center gap-2 text-gray-600 hover:text-orange-500 transition font-medium text-md py-2">
                                 <MdDeliveryDining className="text-2xl" />
-                                My Deliveries
+                                Deliveries
                             </Link>
                         )}
 
