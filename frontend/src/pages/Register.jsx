@@ -6,11 +6,11 @@ import toast from "react-hot-toast";
 
 import illustration from "../assets/illustration.png";
 import logo from "../assets/logo.png"
-import { MdEmail, MdLock, MdPerson } from "react-icons/md";
+import { MdPhone, MdLock, MdPerson } from "react-icons/md";
 
 function Register() {
     const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
+    const [mobile, setMobile] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [role, setRole] = useState("user");
@@ -29,7 +29,7 @@ function Register() {
 
         setLoading(true);
         try {
-            const { data } = await API.post("/users/register", { name, email, password, role });
+            const { data } = await API.post("/users/register", { name, mobile, password, role });
 
             login(data, data.token);
 
@@ -88,14 +88,14 @@ function Register() {
                                 />
                             </div>
 
-                            <label className="text-gray-500 text-sm m-2">Email Address</label>
+                            <label className="text-gray-500 text-sm m-2">Mobile Number</label>
                             <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus-within:ring-1 focus-within:ring-orange-300 focus-within:border-orange-300 transition-all duration-200 ">
-                                <MdEmail className="text-gray-500 text-xl mr-3 shrink-0"/>
+                                <MdPhone className="text-gray-500 text-xl mr-3 shrink-0"/>
                                 <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Enter your email"
+                                    type="tel"
+                                    value={mobile}
+                                    onChange={(e) => setMobile(e.target.value)}
+                                    placeholder="Enter your mobile number"
                                     required
                                     className="flex-1 focus:outline-none text-gray-700 text-sm"
                                 />
