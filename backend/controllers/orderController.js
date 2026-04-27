@@ -126,7 +126,9 @@ const updateOrderStatus = async(req, res) => {
         
         io.to("admin").emit("orderUpdated", populatedOrder);
         io.to("deliveryBoy").emit("orderUpdated", populatedOrder);
-        io.to("user").emit("orderUpdated", populatedOrder);
+
+        // Emit to specific user who placed the order
+        io.to(`user-${order.user}`).emit("orderUpdated", populatedOrder);
 
         res.status(200).json(order);
     } catch(err){
@@ -171,7 +173,9 @@ const deleteOrder = async(req, res) => {
         const io = req.app.get("io");
         io.to("admin").emit("orderDeleted", orderId);
         io.to("deliveryBoy").emit("orderDeleted", orderId);
-        io.to("user").emit("orderDeleted", orderId);
+        
+        // Emit to specific user who placed the order
+        io.to(`user-${order.user}`).emit("orderDeleted", orderId);
 
         res.status(200).json({ message: "Order deleted successfully!" });
     } catch(err){

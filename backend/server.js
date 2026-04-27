@@ -16,9 +16,14 @@ const paymentRoutes = require("./routes/paymentRoutes.js");
 const app = express();
 const server = http.createServer(app);
 
+const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL 
+].filter(Boolean);
+
 const io = socketIo(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: allowedOrigins,
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -29,6 +34,11 @@ io.on("connection", (socket) => {
     // User joins a room based on their role
     socket.on("join", (role) => {
         socket.join(role);
+    });
+
+    // Join user-specific room
+    socket.on("joinUserRoom", (userId) => {
+        socket.join(`user-${userId}`);
     });
 
     // Join order-specific room for tracking
@@ -49,7 +59,21 @@ io.on("connection", (socket) => {
 
 app.set("io", io);
 
-app.use(cors());
+// CORS middleware - allows requests from allowed origins
+app.use(cors({
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
+
 app.use(express.json());
 
 app.get("/", (req, res) => {

@@ -23,16 +23,21 @@ function MapUpdater({ center, zoom }) {
 function RoutingMachine({ deliveryLocation, customerLocation, onRouteFound }) {
   const map = useMap();
   const routingControlRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
     if (!map || !deliveryLocation || !customerLocation) return;
 
     // Remove existing routing control
     if (routingControlRef.current) {
       try {
-        map.removeControl(routingControlRef.current);
+        if (map && map._layers) {
+          map.removeControl(routingControlRef.current);
+        }
       } catch (e) {
-        console.log('[RoutingMachine] Error removing control:', e);
+        console.log("Error: ", e);
       }
       routingControlRef.current = null;
     }
@@ -46,7 +51,9 @@ function RoutingMachine({ deliveryLocation, customerLocation, onRouteFound }) {
     });
 
     // Small delay to ensure map is ready
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      
       try {
         // Create routing control
         const routingControl = L.Routing.control({
@@ -64,47 +71,58 @@ function RoutingMachine({ deliveryLocation, customerLocation, onRouteFound }) {
           },
           createMarker: function() { return null; },
           show: false,
-        }).addTo(map);
+        });
 
-        setTimeout(() => {
-          const containers = document.querySelectorAll('.leaflet-routing-container');
-          containers.forEach(container => {
-            container.style.display = 'none';
-          });
-        }, 100);
-
-        routingControl.on('routesfound', function(e) {
-          const routes = e.routes;
-          const summary = routes[0].summary;
+        if (isMountedRef.current && map && map._layers) {
+          routingControl.addTo(map);
           
-          const distanceKm = summary.totalDistance / 1000;
-          const timeMinutes = Math.round(summary.totalTime / 60);
-          
-          if (onRouteFound) {
-            onRouteFound({
-              distance: distanceKm,
-              time: timeMinutes
+          setTimeout(() => {
+            if (!isMountedRef.current) return;
+            const containers = document.querySelectorAll('.leaflet-routing-container');
+            containers.forEach(container => {
+              container.style.display = 'none';
             });
-          }
-        });
+          }, 100);
 
-        routingControl.on('routingerror', function(e) {
-          console.error('[RoutingMachine] Routing error:', e);
-        });
+          routingControl.on('routesfound', function(e) {
+            if (!isMountedRef.current) return;
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            
+            const distanceKm = summary.totalDistance / 1000;
+            const timeMinutes = Math.round(summary.totalTime / 60);
+            
+            if (onRouteFound) {
+              onRouteFound({
+                distance: distanceKm,
+                time: timeMinutes
+              });
+            }
+          });
 
-        routingControlRef.current = routingControl;
+          routingControl.on('routingerror', function(e) {
+            console.error('[RoutingMachine] Routing error:', e);
+          });
+
+          routingControlRef.current = routingControl;
+        }
       } catch (error) {
-        console.error('[RoutingMachine] Routing error:', e);
+        console.error('[RoutingMachine] Error creating route:', error);
       }
     }, 100);
 
     // Cleanup
     return () => {
+      isMountedRef.current = false;
+      clearTimeout(timeoutId);
+      
       if (routingControlRef.current) {
         try {
-          map.removeControl(routingControlRef.current);
+          if (map && map._layers) {
+            map.removeControl(routingControlRef.current);
+          }
         } catch (e) {
-          console.log('[RoutingMachine] Error during cleanup:', e);
+          console.log("Error: ", e);
         }
         routingControlRef.current = null;
       }

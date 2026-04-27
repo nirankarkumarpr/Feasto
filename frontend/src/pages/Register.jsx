@@ -103,39 +103,39 @@ function Register() {
 
                             <label className="text-gray-500 text-sm m-2">Select Role</label>
                             <div className="flex gap-3">
-                                <label className="flex-1 flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 cursor-pointer hover:border-orange-300 transition-all duration-200" style={{borderColor: role === 'user' ? '#f97316' : ''}}>
-                                    <input
-                                        type="radio"
-                                        name="role"
-                                        value="user"
-                                        checked={role === 'user'}
-                                        onChange={(e) => setRole(e.target.value)}
-                                        className="w-4 h-4 appearance-none border-2 border-gray-300 rounded-full cursor-pointer checked:bg-orange-500 checked:border-orange-500"
-                                    />
-                                    <span className="text-gray-700 text-sm font-medium">Customer</span>
-                                </label>
-                                <label className="flex-1 flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 cursor-pointer hover:border-orange-300 transition-all duration-200" style={{borderColor: role === 'admin' ? '#f97316' : ''}}>
-                                    <input
-                                        type="radio"
-                                        name="role"
-                                        value="admin"
-                                        checked={role === 'admin'}
-                                        onChange={(e) => setRole(e.target.value)}
-                                        className="w-4 h-4 appearance-none border-2 border-gray-300 rounded-full cursor-pointer checked:bg-orange-500 checked:border-orange-500"
-                                    />
-                                    <span className="text-gray-700 text-sm font-medium">Admin</span>
-                                </label>
-                                <label className="flex-1 flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 cursor-pointer hover:border-orange-300 transition-all duration-200" style={{borderColor: role === 'deliveryBoy' ? '#f97316' : ''}}>
-                                    <input
-                                        type="radio"
-                                        name="role"
-                                        value="deliveryBoy"
-                                        checked={role === 'deliveryBoy'}
-                                        onChange={(e) => setRole(e.target.value)}
-                                        className="w-4 h-4 appearance-none border-2 border-gray-300 rounded-full cursor-pointer checked:bg-orange-500 checked:border-orange-500"
-                                    />
-                                    <span className="text-gray-700 text-sm font-medium">Delivery Boy</span>
-                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => setRole('user')}
+                                    className={`flex-1 flex items-center justify-center gap-2 border-2 rounded-xl px-4 py-3 cursor-pointer transition-all duration-200 font-medium text-sm ${
+                                        role === 'user' 
+                                            ? 'bg-orange-50 border-orange-500 text-orange-600' 
+                                            : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-orange-300'
+                                    }`}
+                                >
+                                    Customer
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setRole('admin')}
+                                    className={`flex-1 flex items-center justify-center gap-2 border-2 rounded-xl px-4 py-3 cursor-pointer transition-all duration-200 font-medium text-sm ${
+                                        role === 'admin' 
+                                            ? 'bg-orange-50 border-orange-500 text-orange-600' 
+                                            : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-orange-300'
+                                    }`}
+                                >
+                                    Admin
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setRole('deliveryBoy')}
+                                    className={`flex-1 flex items-center justify-center gap-2 border-2 rounded-xl px-4 py-3 cursor-pointer transition-all duration-200 font-medium text-sm ${
+                                        role === 'deliveryBoy' 
+                                            ? 'bg-orange-50 border-orange-500 text-orange-600' 
+                                            : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-orange-300'
+                                    }`}
+                                >
+                                    Delivery Boy
+                                </button>
                             </div>
 
                             <label className="text-gray-500 text-sm m-2">Password</label>

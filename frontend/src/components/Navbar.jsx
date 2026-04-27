@@ -62,7 +62,8 @@ function Navbar() {
     const getShortAddress = (address) => {
         if (!address) return "Select location";
         const parts = address.split(',');
-        return parts.slice(0, 2).join(',');
+        const shortAddress = parts.slice(0, 2).join(", ");
+        return shortAddress.length > 50 ? shortAddress.substring(0, 50) + '...' : shortAddress;
     };
 
     return (
@@ -79,12 +80,12 @@ function Navbar() {
                             onClick={() => setIsLocationModalOpen(!isLocationModalOpen)}
                             className="flex items-center text-gray-600 bg-gray-50 border-gray-300 border rounded-full px-3 sm:px-8 py-2 text-xs sm:text-sm font-medium hover:bg-gray-100 transition cursor-pointer h-8 sm:h-10"
                         >
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-gray-800">Hello, {user?.name}</span>
+                            <div className="flex items-center gap-1.5 overflow-hidden">
+                                <span className="text-gray-800 whitespace-nowrap">Hello, {user?.name}</span>
                                 <span className="hidden sm:inline text-gray-400">|</span>
-                                <span className="hidden sm:flex items-center gap-0.5 text-orange-500 text-xs font-semibold">
-                                    {getShortAddress(currentLocation?.address)}
-                                    <MdChevronRight className="text-sm" />
+                                <span className="hidden sm:flex items-center gap-0.5 text-orange-500 text-xs font-semibold overflow-hidden">
+                                    <span className="truncate">{getShortAddress(currentLocation?.address)}</span>
+                                    <MdChevronRight className="text-sm flex-shrink-0" />
                                 </span>
                             </div>
                         </button>

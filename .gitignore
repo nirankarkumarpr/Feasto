@@ -1,4 +1,37 @@
-backend/node_modules/
-backend/.env
-.vscode/
+# Environment files
+.env
+.env.*
+
+# Dependencies
+node_modules/
+
+# Build files
+dist/
+build/
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+.cache/
+temp/
+tmp/

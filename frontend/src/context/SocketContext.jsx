@@ -9,7 +9,7 @@ export const SocketProvider = ({ children }) => {
     const { user } = useAuth();
 
     useEffect(() => {
-        const newSocket = io("http://localhost:5000", {
+        const newSocket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:5000", {
             transports: ["websocket"],
             reconnection: true,
             reconnectionAttempts: 5,
@@ -19,6 +19,10 @@ export const SocketProvider = ({ children }) => {
         newSocket.on("connect", () => {
             if (user?.role) {
                 newSocket.emit("join", user.role);
+            }
+            // Join user-specific room
+            if (user?._id) {
+                newSocket.emit("joinUserRoom", user._id);
             }
         });
 
@@ -33,7 +37,9 @@ export const SocketProvider = ({ children }) => {
         setSocket(newSocket);
 
         return () => {
-            newSocket.close();
+            if (newSocket.connected) {
+                newSocket.close();
+            }
         };
     }, [user]);
 
