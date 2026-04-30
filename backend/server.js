@@ -6,6 +6,13 @@ const connectDB = require("./config/db.js");
 const dotenv = require("dotenv");
 
 dotenv.config();
+
+// Debug: Check if environment variables are loaded
+console.log("Environment variables loaded:");
+console.log("MONGO_URL:", process.env.MONGO_URL ? "✓ Set" : "✗ Missing");
+console.log("JWT_SECRETKEY:", process.env.JWT_SECRETKEY ? "✓ Set" : "✗ Missing");
+console.log("FRONTEND_URL:", process.env.FRONTEND_URL ? "✓ Set" : "✗ Missing");
+
 connectDB();
 
 const foodRoutes = require("./routes/foodRoutes.js");
