@@ -1,4 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { SocketProvider } from "./context/SocketContext";
@@ -17,6 +18,16 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import CartNotification from "./components/CartNotification";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
   const location = useLocation();
   const hideNavbar = location.pathname === "/login" || location.pathname === "/register";
@@ -26,6 +37,7 @@ function App() {
     <AuthProvider>
       <SocketProvider>
         <CartProvider>
+          <ScrollToTop />
           <div className="min-h-screen flex flex-col">
             {!hideNavbar && <Navbar />}
 
