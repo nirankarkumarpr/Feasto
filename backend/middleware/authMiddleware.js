@@ -18,6 +18,11 @@ const protect = async(req, res, next) => {
 
         req.user = await User.findById(decoded.id).select("-password");
 
+        // Check if user is approved (for admin role)
+        if(req.user.role === "admin" && !req.user.isApproved) {
+            return res.status(403).json({ message: "Admin account pending approval!" });
+        }
+
         next();
     } catch(err){
         res.status(500).json({ message: err.message });

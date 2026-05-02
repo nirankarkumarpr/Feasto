@@ -31,6 +31,13 @@ function Register() {
         try {
             const { data } = await API.post("/users/register", { name, mobile, password, role });
 
+            // Check if admin account is pending approval
+            if (data.pendingApproval) {
+                toast.success(data.message, { duration: 5000 });
+                navigate("/login");
+                return;
+            }
+
             login(data, data.token);
 
             toast.success(`Welcome, ${data.name}!`);

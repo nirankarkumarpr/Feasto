@@ -4,9 +4,11 @@ import API from "../api/axios";
 import toast from "react-hot-toast";
 import { MdDashboard, MdShoppingCart, MdRestaurantMenu } from "react-icons/md";
 import { BsCashStack } from "react-icons/bs";
+import { FaUserShield } from "react-icons/fa";
 import PageHeader from "../components/PageHeader";
 import OrdersTab from "../components/admin/OrdersTab";
 import FoodsTab from "../components/admin/FoodsTab";
+import PendingAdminsTab from "../components/admin/PendingAdminsTab";
 import OrderModal from "../components/admin/OrderModal";
 import FoodModal from "../components/admin/FoodModal";
 import { FaCheckCircle } from "react-icons/fa";
@@ -18,6 +20,8 @@ function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("allorders");
   const [orders, setOrders] = useState([]);
   const [foods, setFoods] = useState([]);
+  const [allAdmins, setAllAdmins] = useState([]);
+  const [pendingAdmins, setPendingAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showFoodModal, setShowFoodModal] = useState(false);
@@ -56,7 +60,8 @@ function AdminDashboard() {
             'available': 1,
             'accepted': 2,
             'delivered': 3,
-            'menu': 4
+            'menu': 4,
+            'admins': 5
           };
           const buttonIndex = tabMap[newTab];
           if (buttons[buttonIndex]) {
@@ -113,11 +118,47 @@ function AdminDashboard() {
       toast.success(`Order ${orderId.slice(-8).toUpperCase()} has been deleted`);
     });
 
+    // Admin approval socket events
+    socket.on("newAdminRequest", (newAdmin) => {
+      setPendingAdmins((prev) => [newAdmin, ...prev]);
+      setAllAdmins((prev) => [newAdmin, ...prev]);
+      toast("New admin registration request!", {
+        icon: "👤",
+        duration: 4000,
+      });
+    });
+
+    socket.on("adminApproved", (data) => {
+      setPendingAdmins((prev) => prev.filter((admin) => admin._id !== data._id));
+      setAllAdmins((prev) => 
+        prev.map((admin) => 
+          admin._id === data._id ? { ...admin, isApproved: true } : admin
+        )
+      );
+      toast.success(`${data.name} has been approved as admin!`);
+    });
+
+    socket.on("adminRejected", (data) => {
+      setPendingAdmins((prev) => prev.filter((admin) => admin._id !== data._id));
+      setAllAdmins((prev) => prev.filter((admin) => admin._id !== data._id));
+      toast.error(`${data.name}'s admin request has been rejected`);
+    });
+
+    socket.on("adminDeleted", (data) => {
+      setPendingAdmins((prev) => prev.filter((admin) => admin._id !== data._id));
+      setAllAdmins((prev) => prev.filter((admin) => admin._id !== data._id));
+      toast.error(`${data.name}'s admin account has been deleted`);
+    });
+
     return () => {
       socket.off("newOrder");
       socket.off("orderUpdated");
       socket.off("orderCancelledByUser");
       socket.off("orderDeleted");
+      socket.off("newAdminRequest");
+      socket.off("adminApproved");
+      socket.off("adminRejected");
+      socket.off("adminDeleted");
     };
   }, [socket, selectedOrder]);
 
@@ -132,6 +173,9 @@ function AdminDashboard() {
       } else if (activeTab === "menu") {
         const { data } = await API.get("/foods");
         setFoods(data);
+      } else if (activeTab === "admins") {
+        const { data } = await API.get("/users/all-admins");
+        setAllAdmins(data);
       }
     } catch (err) {
       toast.error("Failed to fetch data!");
@@ -149,7 +193,22 @@ function AdminDashboard() {
         // Failed to fetch foods count
       }
     };
+    
+    const fetchAdminsData = async () => {
+      try {
+        const [allAdminsData, pendingAdminsData] = await Promise.all([
+          API.get("/users/all-admins"),
+          API.get("/users/pending-admins")
+        ]);
+        setAllAdmins(allAdminsData.data);
+        setPendingAdmins(pendingAdminsData.data);
+      } catch (err) {
+        // Failed to fetch admins data
+      }
+    };
+    
     fetchFoodsCount();
+    fetchAdminsData();
   }, []);
 
   const stats = {
@@ -160,6 +219,41 @@ function AdminDashboard() {
     pendingOrders: orders.filter(o => o.status === "pending").length,
     acceptedOrders: orders.filter(o => o.status !== "pending" && o.status !== "cancelled").length,
     totalFoods: foods.length,
+    pendingAdmins: pendingAdmins.length,
+  };
+
+  const handleApproveAdmin = async (adminId) => {
+    try {
+      await API.put(`/users/approve-admin/${adminId}`);
+      setPendingAdmins((prev) => prev.filter((admin) => admin._id !== adminId));
+      setAllAdmins((prev) => 
+        prev.map((admin) => 
+          admin._id === adminId ? { ...admin, isApproved: true } : admin
+        )
+      );
+      toast.success("Admin approved successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to approve admin!");
+    }
+  };
+
+  const handleRejectAdmin = async (adminId) => {
+    try {
+      const admin = allAdmins.find(a => a._id === adminId);
+      
+      // Use different endpoint based on approval status
+      if (admin.isApproved) {
+        await API.delete(`/users/delete-admin/${adminId}`);
+      } else {
+        await API.delete(`/users/reject-admin/${adminId}`);
+      }
+      
+      setPendingAdmins((prev) => prev.filter((admin) => admin._id !== adminId));
+      setAllAdmins((prev) => prev.filter((admin) => admin._id !== adminId));
+      toast.success(admin.isApproved ? "Admin deleted successfully!" : "Admin request rejected!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete admin!");
+    }
   };
 
   return (
@@ -278,6 +372,9 @@ function AdminDashboard() {
               <span>Delivered Orders</span>
             </button>
 
+            {/* Vertical Separator */}
+            <div className="w-0.5 sm:w-px bg-gray-400 sm:bg-gray-300 self-stretch my-1"></div>
+
             <button
               onClick={(e) => handleTabChange("menu", e)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition cursor-pointer whitespace-nowrap ${
@@ -289,6 +386,24 @@ function AdminDashboard() {
               <MdRestaurantMenu />
               Menu
             </button>
+
+            {/* Admins Tab */}
+            <button
+              onClick={(e) => handleTabChange("admins", e)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition cursor-pointer whitespace-nowrap relative ${
+                activeTab === "admins"
+                  ? "bg-orange-500 text-white hover:bg-orange-600"
+                  : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              <FaUserShield />
+              <span>Admins</span>
+              {stats.pendingAdmins > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {stats.pendingAdmins}
+                </span>
+              )}
+            </button>
           </div>
 
           <div>
@@ -296,8 +411,10 @@ function AdminDashboard() {
               <div className="text-center py-10">Loading...</div>
             ) : activeTab === "allorders" || activeTab === "available" || activeTab === "accepted" || activeTab === "delivered" ? (
               <OrdersTab orders={orders} setSelectedOrder={setSelectedOrder} fetchData={fetchData} activeTab={activeTab} recentUpdateRef={recentUpdateRef} />
-            ) : (
+            ) : activeTab === "menu" ? (
               <FoodsTab foods={foods} setShowFoodModal={setShowFoodModal} setFoodForm={setFoodForm} fetchData={fetchData} />
+            ) : (
+              <PendingAdminsTab admins={allAdmins} onApprove={handleApproveAdmin} onReject={handleRejectAdmin} />
             )}
           </div>
         </div>

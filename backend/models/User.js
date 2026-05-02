@@ -20,6 +20,15 @@ const userSchema = new mongoose.Schema({
         enum: ["user", "admin", "deliveryBoy"],
         default: "user",
     },
+    isApproved: {
+        type: Boolean,
+        default: true, // Auto-approve for user and deliveryBoy, false for admin
+    },
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+    },
 },
 {
     timestamps: true,
