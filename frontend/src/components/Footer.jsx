@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import logos from "../assets/logo.png";
 import { FaInstagram } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
@@ -6,6 +7,22 @@ import { LiaFacebook } from "react-icons/lia";
 import { IoSend } from "react-icons/io5";
 
 function Footer() {
+    const [message, setMessage] = useState("");
+
+    const handleSendMessage = () => {
+        if (!message.trim()) return;
+        
+        const mailtoLink = `mailto:nirankarkumarpr@gmail.com?subject=Message from Feasto Website&body=${encodeURIComponent(message)}`;
+        window.location.href = mailtoLink;
+        setMessage("");
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSendMessage();
+        }
+    };
+
     return (
         <footer className="w-full bg-gray-50 py-12">
             <div className="mx-auto max-w-7xl px-12">
@@ -24,9 +41,15 @@ function Footer() {
                         We make sure your tummy is filled with delicious food, delivered quickly to your door.
                         </p>
                         <div className="flex items-center gap-4 mt-4">
-                            <LiaFacebook className="text-2xl text-gray-800 hover:text-orange-500 cursor-pointer transition"/ >
-                            <FaInstagram className="text-xl text-gray-800 hover:text-orange-500 cursor-pointer transition"/ >
-                            <FaXTwitter className="text-xl text-gray-800 hover:text-orange-500 cursor-pointer transition"/ >
+                            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                                <LiaFacebook className="text-2xl text-gray-800 hover:text-orange-500 cursor-pointer transition"/ >
+                            </a>
+                            <a href="https://www.instagram.com/nirankar.18" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                <FaInstagram className="text-xl text-gray-800 hover:text-orange-500 cursor-pointer transition"/ >
+                            </a>
+                            <a href="https://x.com/nirankarkumarpr" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
+                                <FaXTwitter className="text-xl text-gray-800 hover:text-orange-500 cursor-pointer transition"/ >
+                            </a>
                         </div>
                     </div>
 
@@ -78,12 +101,16 @@ function Footer() {
 
                         <div className="mt-4 flex w-full items-center rounded-full border border-gray-300 px-4 py-2">
                             <input
-                                type="email"
-                                placeholder="Email Address"
+                                type="text"
+                                placeholder="Write your message..."
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                onKeyPress={handleKeyPress}
                                 className="w-full bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400"
                             />
                             <button
                                 type="button"
+                                onClick={handleSendMessage}
                                 aria-label="Send"
                                 className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-700 transition hover:bg-gray-100 cursor-pointer"
                             >

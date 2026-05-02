@@ -154,13 +154,13 @@ function PendingAdminsTab({ admins, onApprove, onReject }) {
             <div className="flex gap-2">
               <button
                 onClick={handleCancelDelete}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer"
               >
                 Delete
               </button>

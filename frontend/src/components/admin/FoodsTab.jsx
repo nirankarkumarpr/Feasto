@@ -121,28 +121,28 @@ function FoodsTab({ foods, setShowFoodModal, setFoodForm, fetchData }) {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-sm w-full p-4 sm:p-6 animate-scale-in">
-            <div className="flex items-center justify-center mb-3 sm:mb-4">
-              <div className="bg-red-100 p-3 sm:p-4 rounded-full">
-                <FaTrash className="text-2xl sm:text-3xl text-red-500" />
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-2xl max-w-xs w-full p-3 sm:p-5 animate-scale-in">
+            <div className="flex items-center justify-center mb-2 sm:mb-3">
+              <div className="bg-red-100 p-2 sm:p-3 rounded-full">
+                <FaTrash className="text-xl sm:text-2xl text-red-500" />
               </div>
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-800 text-center mb-1 sm:mb-2">
+            <h3 className="text-base sm:text-lg font-bold text-gray-800 text-center mb-1">
               Delete Food Item?
             </h3>
-            <p className="text-sm sm:text-base text-gray-600 text-center mb-4 sm:mb-6">
-              Are you sure you want to delete <span className="font-semibold text-gray-800">{deleteConfirm.name}</span>? This action cannot be undone.
+            <p className="text-xs sm:text-sm text-gray-600 text-center mb-3 sm:mb-4">
+              Delete <span className="font-semibold text-gray-800">{deleteConfirm.name}</span>? This can't be undone.
             </p>
-            <div className="flex gap-2 sm:gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={handleCancelDelete}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-colors"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-colors"
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer"
               >
                 Delete
               </button>
