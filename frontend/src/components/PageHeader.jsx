@@ -6,7 +6,7 @@ function PageHeader({ icon: Icon, badge, title, subtitle }) {
         {badge}
       </span>
       
-      <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 text-center">
+      <h2 className="text-3xl md:text-4xl px-4 font-bold text-gray-900 mt-2 text-center">
         {title}
       </h2>
     </div>

@@ -81,7 +81,7 @@ function Navbar() {
                             className="flex items-center text-gray-600 bg-gray-50 border-gray-300 border rounded-full px-3 sm:px-8 py-2 text-xs sm:text-sm font-medium hover:bg-gray-100 transition cursor-pointer h-8 sm:h-10"
                         >
                             <div className="flex items-center gap-1.5 overflow-hidden">
-                                <span className="text-gray-800 whitespace-nowrap">Hello, {user?.name}</span>
+                                <span className="text-gray-800 whitespace-nowrap">Hello, {user?.name.split(' ')[0]}</span>
                                 <span className="hidden sm:inline text-gray-400">|</span>
                                 <span className="hidden sm:flex items-center gap-0.5 text-orange-500 text-xs font-semibold overflow-hidden">
                                     <span className="truncate">{getShortAddress(currentLocation?.address)}</span>
@@ -156,7 +156,7 @@ function Navbar() {
 
                 {user && user.role !== "user" && (
                     <span className="flex items-center text-gray-600 bg-gray-50 border-gray-300 border rounded-full px-3 sm:px-8 py-2 text-xs sm:text-sm font-medium h-8 sm:h-10">
-                        Hello, {user?.name}
+                        Hello, {user?.name.split(' ')[0]}
                     </span>
                 )}
             </div>
